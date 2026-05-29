@@ -4,12 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-catalogs:
-  default:
-    '@types/node':
-      specifier: ^24
-      version: 24.12.4
-
 patchedDependencies:
   fumadocs-core: 3284298a1057d3b5f39470a52e398231c17a8de55b6b931e974f042379f9bcb2
 
@@ -18,7 +12,7 @@ importers:
   .:
     devDependencies:
       '@types/node':
-        specifier: 'catalog:'
+        specifier: ^24
         version: 24.12.4
       turbo:
         specifier: ^2.5.8
