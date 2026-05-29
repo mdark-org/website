@@ -14,18 +14,21 @@ importers:
       '@types/node':
         specifier: ^24
         version: 24.12.4
+      '@typescript/native-preview':
+        specifier: npm:@typescript/native-preview
+        version: 7.0.0-dev.20260527.2
       turbo:
         specifier: ^2.5.8
         version: 2.9.15
       typescript:
-        specifier: npm:@typescript/native-preview
-        version: '@typescript/native-preview@7.0.0-dev.20260527.2'
+        specifier: ^6.0.3
+        version: 6.0.3
 
   datasource:
     dependencies:
       '@content-collections/markdown':
         specifier: ^0.1.4
-        version: 0.1.4(@content-collections/core@0.15.1(@typescript/native-preview@7.0.0-dev.20260527.2))
+        version: 0.1.4(@content-collections/core@0.15.1(typescript@6.0.3))
       feed:
         specifier: ^5.2.1
         version: 5.2.1
@@ -62,7 +65,7 @@ importers:
         version: 6.0.2
       tsdown:
         specifier: 0.21.10
-        version: 0.21.10(@typescript/native-preview@7.0.0-dev.20260527.2)(@typescript/native-preview@7.0.0-dev.20260527.2)
+        version: 0.21.10(@typescript/native-preview@7.0.0-dev.20260527.2)(typescript@6.0.3)
 
   fuma:
     dependencies:
@@ -71,10 +74,10 @@ importers:
         version: 1.5.0(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@content-collections/markdown':
         specifier: ^0.1.4
-        version: 0.1.4(@content-collections/core@0.15.1(@typescript/native-preview@7.0.0-dev.20260527.2))
+        version: 0.1.4(@content-collections/core@0.15.1(typescript@6.0.3))
       '@fuma-comment/react':
         specifier: 1.4.0
-        version: 1.4.0(@floating-ui/dom@1.7.6)(@tiptap/extension-code-block@3.23.6(@tiptap/core@3.23.6(@tiptap/pm@3.23.6))(@tiptap/pm@3.23.6))(@tiptap/extensions@3.23.6(@tiptap/core@3.23.6(@tiptap/pm@3.23.6))(@tiptap/pm@3.23.6))(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(@typescript/native-preview@7.0.0-dev.20260527.2)(highlight.js@11.11.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 1.4.0(@floating-ui/dom@1.7.6)(@tiptap/extension-code-block@3.23.6(@tiptap/core@3.23.6(@tiptap/pm@3.23.6))(@tiptap/pm@3.23.6))(@tiptap/extensions@3.23.6(@tiptap/core@3.23.6(@tiptap/pm@3.23.6))(@tiptap/pm@3.23.6))(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(highlight.js@11.11.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       '@fuma-comment/server':
         specifier: ^1.4.2
         version: 1.4.2(better-auth@1.4.6(next@16.2.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(drizzle-orm@0.45.0(kysely@0.28.17)(postgres@3.4.9))(hono@4.12.18)(next@16.2.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6))
@@ -3444,6 +3447,11 @@ packages:
     resolution: {integrity: sha512-VpKvD9Z0Hu/xrGUAYX1wnhfpqv835wIwGqeKfulvBPTOcDap0E3nFwyzCAVV85fB1sBcBDEfTP+7FSW7GzwWSQ==}
     hasBin: true
 
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   ufo@1.6.4:
     resolution: {integrity: sha512-JFNbkD1Svwe0KvGi8GOeLcP4kAWQ609twvCdcHxq1oSL8svv39ZuSvajcD8B+5D0eL4+s1Is2D/O6KN3qcTeRA==}
 
@@ -3712,7 +3720,7 @@ snapshots:
 
   '@better-fetch/fetch@1.1.18': {}
 
-  '@content-collections/core@0.15.1(@typescript/native-preview@7.0.0-dev.20260527.2)':
+  '@content-collections/core@0.15.1(typescript@6.0.3)':
     dependencies:
       '@standard-schema/spec': 1.1.0
       camelcase: 8.0.0
@@ -3724,12 +3732,12 @@ snapshots:
       pluralize: 8.0.0
       serialize-javascript: 7.0.5
       tinyglobby: 0.2.16
-      typescript: '@typescript/native-preview@7.0.0-dev.20260527.2'
+      typescript: 6.0.3
       yaml: 2.9.0
 
-  '@content-collections/markdown@0.1.4(@content-collections/core@0.15.1(@typescript/native-preview@7.0.0-dev.20260527.2))':
+  '@content-collections/markdown@0.1.4(@content-collections/core@0.15.1(typescript@6.0.3))':
     dependencies:
-      '@content-collections/core': 0.15.1(@typescript/native-preview@7.0.0-dev.20260527.2)
+      '@content-collections/core': 0.15.1(typescript@6.0.3)
       rehype-raw: 7.0.0
       rehype-stringify: 10.0.1
       remark-parse: 11.0.0
@@ -4013,7 +4021,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@fuma-comment/react@1.4.0(@floating-ui/dom@1.7.6)(@tiptap/extension-code-block@3.23.6(@tiptap/core@3.23.6(@tiptap/pm@3.23.6))(@tiptap/pm@3.23.6))(@tiptap/extensions@3.23.6(@tiptap/core@3.23.6(@tiptap/pm@3.23.6))(@tiptap/pm@3.23.6))(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(@typescript/native-preview@7.0.0-dev.20260527.2)(highlight.js@11.11.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
+  '@fuma-comment/react@1.4.0(@floating-ui/dom@1.7.6)(@tiptap/extension-code-block@3.23.6(@tiptap/core@3.23.6(@tiptap/pm@3.23.6))(@tiptap/pm@3.23.6))(@tiptap/extensions@3.23.6(@tiptap/core@3.23.6(@tiptap/pm@3.23.6))(@tiptap/pm@3.23.6))(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(highlight.js@11.11.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3)':
     dependencies:
       '@radix-ui/react-collapsible': 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@radix-ui/react-dialog': 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -4040,7 +4048,7 @@ snapshots:
       '@tiptap/suggestion': 3.23.6(@tiptap/core@3.23.6(@tiptap/pm@3.23.6))(@tiptap/pm@3.23.6)
       class-variance-authority: 0.7.1
       cmdk: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      frimousse: 0.3.0(@typescript/native-preview@7.0.0-dev.20260527.2)(react@19.2.6)
+      frimousse: 0.3.0(react@19.2.6)(typescript@6.0.3)
       hast-util-to-jsx-runtime: 2.3.6
       lowlight: 3.3.0
       react: 19.2.6
@@ -5486,11 +5494,11 @@ snapshots:
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
 
-  frimousse@0.3.0(@typescript/native-preview@7.0.0-dev.20260527.2)(react@19.2.6):
+  frimousse@0.3.0(react@19.2.6)(typescript@6.0.3):
     dependencies:
       react: 19.2.6
     optionalDependencies:
-      typescript: '@typescript/native-preview@7.0.0-dev.20260527.2'
+      typescript: 6.0.3
 
   fsevents@2.3.3:
     optional: true
@@ -6621,7 +6629,7 @@ snapshots:
 
   resolve-pkg-maps@1.0.0: {}
 
-  rolldown-plugin-dts@0.23.2(@typescript/native-preview@7.0.0-dev.20260527.2)(@typescript/native-preview@7.0.0-dev.20260527.2)(rolldown@1.0.0-rc.17):
+  rolldown-plugin-dts@0.23.2(@typescript/native-preview@7.0.0-dev.20260527.2)(rolldown@1.0.0-rc.17)(typescript@6.0.3):
     dependencies:
       '@babel/generator': 8.0.0-rc.3
       '@babel/helper-validator-identifier': 8.0.0-rc.3
@@ -6636,7 +6644,7 @@ snapshots:
       rolldown: 1.0.0-rc.17
     optionalDependencies:
       '@typescript/native-preview': 7.0.0-dev.20260527.2
-      typescript: '@typescript/native-preview@7.0.0-dev.20260527.2'
+      typescript: 6.0.3
     transitivePeerDependencies:
       - oxc-resolver
 
@@ -6816,7 +6824,7 @@ snapshots:
 
   trough@2.2.0: {}
 
-  tsdown@0.21.10(@typescript/native-preview@7.0.0-dev.20260527.2)(@typescript/native-preview@7.0.0-dev.20260527.2):
+  tsdown@0.21.10(@typescript/native-preview@7.0.0-dev.20260527.2)(typescript@6.0.3):
     dependencies:
       ansis: 4.3.0
       cac: 7.0.0
@@ -6827,7 +6835,7 @@ snapshots:
       obug: 2.1.1
       picomatch: 4.0.4
       rolldown: 1.0.0-rc.17
-      rolldown-plugin-dts: 0.23.2(@typescript/native-preview@7.0.0-dev.20260527.2)(@typescript/native-preview@7.0.0-dev.20260527.2)(rolldown@1.0.0-rc.17)
+      rolldown-plugin-dts: 0.23.2(@typescript/native-preview@7.0.0-dev.20260527.2)(rolldown@1.0.0-rc.17)(typescript@6.0.3)
       semver: 7.8.1
       tinyexec: 1.2.2
       tinyglobby: 0.2.16
@@ -6835,7 +6843,7 @@ snapshots:
       unconfig-core: 7.5.0
       unrun: 0.2.39
     optionalDependencies:
-      typescript: '@typescript/native-preview@7.0.0-dev.20260527.2'
+      typescript: 6.0.3
     transitivePeerDependencies:
       - '@ts-macro/tsc'
       - '@typescript/native-preview'
@@ -6859,6 +6867,8 @@ snapshots:
       '@turbo/linux-arm64': 2.9.15
       '@turbo/windows-64': 2.9.15
       '@turbo/windows-arm64': 2.9.15
+
+  typescript@6.0.3: {}
 
   ufo@1.6.4: {}
 
