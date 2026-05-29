@@ -4,6 +4,9 @@ const config = {
   images: {
     unoptimized: true
   },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
   output: 'standalone',
 };
 
