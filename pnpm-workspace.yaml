@@ -3,8 +3,11 @@ packages:
   - datasource
   - packages/**/*
 
-patchedDependencies:
-  fumadocs-core: patches/fumadocs-core.patch
+allowBuilds:
+  esbuild: true
+  msgpackr-extract: false
+  sharp: false
+
 catalog:
   vite: npm:@voidzero-dev/vite-plus-core@latest
   vite-plus: latest
@@ -25,3 +28,7 @@ catalogs:
     hono: ^4.12.18
   tailwindcss:
     "tailwindcss": "^4.3.0"
+minimumReleaseAgeExclude:
+  - tsdown@0.22.1
+patchedDependencies:
+  fumadocs-core: patches/fumadocs-core.patch

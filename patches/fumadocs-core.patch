@@ -1,5 +1,5 @@
 diff --git a/dist/framework/index.js b/dist/framework/index.js
-index eac6d59e8eb094cd5082627921238762960e448f..2d3b6c1a515dbc9970858cdefbbd4018b6497b70 100644
+index eac6d59e8eb094cd5082627921238762960e448f..52fb3e71ee171475ba200c4e212ab05f1bdd1286 100644
 --- a/dist/framework/index.js
 +++ b/dist/framework/index.js
 @@ -29,7 +29,7 @@ function FrameworkProvider({ Link, useRouter, useParams, usePathname, Image, chi
@@ -7,7 +7,7 @@ index eac6d59e8eb094cd5082627921238762960e448f..2d3b6c1a515dbc9970858cdefbbd4018
  }
  function usePathname() {
 -	return use(FrameworkContext).usePathname();
-+	return decodeURIComponent(use(FrameworkContext).usePathname());
++	return encodeURIComponent(use(FrameworkContext).usePathname());
  }
  function useRouter() {
  	return use(FrameworkContext).useRouter();
