@@ -50,23 +50,26 @@ export const build = async (datasources: Datasource[]) => {
     createDatasourceContents(source)
     createSidebarContents(source)
   }
-  const importLines = keys.map(it => `import * as ${it} from "./${it}.json" with {type: "json"};`)
+  const importLines = keys.map(it => `import ${it} from "./${it}.json" with {type: "json"};`)
     .join("\n")
-  const exportLine = `export { ${keys.join(',')} }`
+  const sourceLine = `const source = { ${keys.join(',')} }`
+  const exportLine = `export default source`
   const indexFile = fs.openSync(`.source/generated/index.mjs`, 'w+')
-  const dtsFile = fs.openSync(`.source/generated/index.d.ts`, 'w+')
-  const sidebarImportLines = keys.map(it => `import * as ${it} from "./${it}.json" with {type: "json"};`)
+
+  const sidebarImportLines = keys.map(it => `import ${it} from "./${it}.json" with {type: "json"};`)
     .join("\n")
   const sidebarIndexFile = fs.openSync(`.source/generated/sidebar/index.mjs`, 'w+')
   fs.writeSync(indexFile, `
   ${importLines}
+  ${sourceLine}
   ${exportLine}
 `)
   fs.writeSync(sidebarIndexFile, `
   ${sidebarImportLines}
+  ${sourceLine}
   ${exportLine}
 `)
-  fs.writeSync(dtsFile, `
+  const dts = `
 type Page = {
   url: string,
   name: string,
@@ -99,6 +102,10 @@ type Source = {
   pageTree: Tree,
   datasourceInfo: DatasourceInfo
 }
-`)
+`
+  const dtsFile = fs.openSync(`.source/generated/index.d.ts`, 'w+')
+  const sidebarDtsFile = fs.openSync(`.source/generated/sidebar/index.d.ts`, 'w+')
+  fs.writeSync(dtsFile,dts)
+  fs.writeSync(sidebarDtsFile,dts)
 
 }

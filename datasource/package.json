@@ -22,9 +22,9 @@
   },
   "dependencies": {
     "@content-collections/markdown": "^0.1.4",
-    "zod": "^3.25.42",
-    "feed": "^5.1.0",
-    "unstorage": "1.17.3"
+    "zod": "^4.4.3",
+    "feed": "^5.2.1",
+    "unstorage": "1.17.5"
   },
   "devDependencies": {
     "micromatch": "^4.0.8",
@@ -35,6 +35,6 @@
     "@types/serialize-javascript": "^5.0.4",
     "any-date-parser": "^2.2.3",
     "glob": "^13.0.0",
-    "tsdown": "0.17.0"
+    "tsdown": "0.22.1"
   }
 }
