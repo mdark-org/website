@@ -1,19 +1,42 @@
-# 使用轻量级的 Node Alpine 镜像
-FROM node:24-alpine
+ARG NODE_VERSION=24.13.0-slim
+
+FROM node:${NODE_VERSION} AS builder
+
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+ENV NEXT_TELEMETRY_DISABLED=1
+
+WORKDIR /app
+
+COPY --from=dependencies /app/node_modules ./node_modules
+
+COPY . .
+
+RUN corepack enable pnpm && pnpm install --config.minimum-release-age=0 --no-frozen-lockfile;
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN corepack enable pnpm && pnpm build
+
+FROM node:${NODE_VERSION} AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
-
-ENV PORT=3000
-
+ENV PORT=8080
 ENV HOSTNAME="0.0.0.0"
+ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY fuma/.next/standalone ./
+COPY --from=builder --chown=node:node /app/fuma/.next/standalone ./
 
-COPY fuma/public ./fuma/public
-COPY fuma/.next/static ./fuma/.next/static
+COPY --from=builder --chown=node:node /app/fuma/public ./fuma/public
+COPY --from=builder --chown=node:node /app/fuma/.next/static ./fuma/.next/static
 
-EXPOSE 3000
+RUN mkdir -p ./fuma/.next
+RUN chown node:node ./fuma/.next
+
+USER node
+
+EXPOSE 8080
 
 CMD ["node", "fuma/server.js"]
