@@ -1,7 +1,0 @@
-# 忽略所有文件
-*
-
-# 仅允许上传我们需要打包的目录（注意前面的 ! 表示不忽略）
-!fuma/.next/standalone/**
-!fuma/.next/static/**
-!fuma/public/**
