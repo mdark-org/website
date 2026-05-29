@@ -5,3 +5,23 @@ packages:
 
 patchedDependencies:
   fumadocs-core: patches/fumadocs-core.patch
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@latest
+  vite-plus: latest
+  vitest: npm:@voidzero-dev/vite-plus-test@latest
+  zod: ^4
+  typescript: "npm:@typescript/native-preview"
+  "@types/node": ^24
+catalogs:
+  react:
+    react: '19.2.6'
+    react-dom: '19.2.6'
+    "@types/react": "^19"
+    "@types/react-dom": "^19"
+  drizzle:
+    drizzle-kit: 1.0.0-rc.1
+    drizzle-orm: 1.0.0-rc.1
+  hono:
+    hono: ^4.12.18
+  tailwindcss:
+    "tailwindcss": "^4.3.0"

@@ -1,4 +1,4 @@
-import * as sources from ".source/generated/sidebar/index.mjs";
+import sources from ".source/generated/sidebar/index.mjs";
 import { Root } from "@repo/datasource/shared";
 import { icons } from "lucide-react";
 import { createElement } from "react";
@@ -22,14 +22,20 @@ const sourceMap = sources as Record<string, unknown>;
 
 const datasources =
   Object.keys(sourceMap)
-    .map((key) => sidebarDatasourceSchema.parse(sourceMap[key]))
-    .map((it) => ({
-      ...it,
-      pageTree: {
-        ...it.pageTree,
-        icon: icon(it.pageTree.icon),
-      },
-    })) as SidebarDatasource[];
+    .map((key) => {
+      const item = sourceMap[key]
+      return sidebarDatasourceSchema.parse(item)
+    })
+    .map((it) => {
+      const i = it
+      return {
+        ...it,
+        pageTree: {
+          ...it.pageTree,
+          icon: icon(it.pageTree.icon),
+        },
+      }
+    }) as SidebarDatasource[];
 
 const tree = {
   name: "root",

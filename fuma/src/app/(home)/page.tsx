@@ -22,12 +22,12 @@ export const metadata: Metadata = {
 export default async function Page() {
   return <>
   <div
-    className="absolute inset-x-0 top-[360px] h-[250px] max-md:hidden"
+    className="absolute inset-x-0 top-90 h-62.5 max-md:hidden"
     style={{
       background: `repeating-linear-gradient(to right, ${gridColor}, ${gridColor} 1px,transparent 1px,transparent 50px), repeating-linear-gradient(to bottom, ${gridColor}, ${gridColor} 1px,transparent 1px,transparent 50px)`,
     }}
   />
-  <main className="container mx-auto relative max-w-[1100px] px-2 py-4 z-[2] lg:py-8">
+  <main className="container mx-auto relative max-w-275 px-2 py-4 z-2 lg:py-8">
     <div
       style={{
         background:
@@ -55,7 +55,7 @@ export default async function Page() {
 }
 function Hero() {
   return (
-    <div className="relative z-[2] pb-4 flex flex-col border-x border-t bg-fd-background/80 px-4 pt-12 max-md:text-center md:px-12 md:pt-16 [.uwu_&]:hidden overflow-hidden">
+    <div className="relative z-2 pb-4 flex flex-col border-x border-t bg-fd-background/80 px-4 pt-12 max-md:text-center md:px-12 md:pt-16 [.uwu_&]:hidden overflow-hidden">
       <div
         className="absolute inset-0 z-[-1] blur-2xl hidden dark:block"
         style={{

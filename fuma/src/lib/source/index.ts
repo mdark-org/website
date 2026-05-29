@@ -1,4 +1,4 @@
-import * as sources from ".source/generated/index.mjs";
+import sources from ".source/generated/index.mjs";
 import {DataSource} from "@repo/datasource/source";
 import { Root } from "@repo/datasource/shared";
 import {icons} from "lucide-react";
@@ -31,10 +31,12 @@ export function generateRssFeed(category: string, feedOption?: Partial<FeedOptio
 }
 
 export const buildSource = () => {
+  const source = sources
   const base = { name: 'root', children: [] as Root[] }
-  const datasources =
-    // @ts-ignore
-    Object.keys(sources).map(key => datasourceSchema.parse(sources[key]))
+
+  const keys = Object.keys(source)
+  const datasources =keys
+    .map(key => datasourceSchema.parse(source[key]))
   .map(it => new DataSource(it.pageTree, it.pageMap, it.datasourceInfo))
   datasources.forEach(it => {
     it.pageTree.icon = icon(it.pageTree.icon)

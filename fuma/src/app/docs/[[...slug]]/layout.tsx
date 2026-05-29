@@ -14,7 +14,7 @@ export default async function Layout({
   const slugs = slug?.map((it) => decodeURIComponent(it));
 
   return (
-    <DocsLayout tree={sidebarSource.getSidebarTreeBySlug(slugs)} {...baseOptions}>
+    <DocsLayout tree={sidebarSource.tree} {...baseOptions}>
       {children}
     </DocsLayout>
   );

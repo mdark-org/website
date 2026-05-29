@@ -11,7 +11,13 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import Video from '@/app/docs/[[...slug]]/video'
 import { Comments } from '@/comment/comment'
 import { config } from '../../../../config'
-import { compileMDX } from '@fumadocs/mdx-remote';
+import { createCompiler } from '@fumadocs/mdx-remote';
+import {ImageZoom} from "@/components/image-zoom.tsx";
+
+
+const compiler = createCompiler({
+  remarkImageOptions: false,
+})
 export const dynamic = 'force-static'
 export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
@@ -25,11 +31,8 @@ export default async function Page(props: {
     return redirect(encodeURI(page!.url));
   }
   console.log(`compiling: ${page?.name}`)
-  const compiled = await compileMDX({
-    source: page!.data!.content ?? '',
-    mdxOptions: {
-      remarkImageOptions: false,
-    }
+  const compiled = await compiler.compile({
+    source: page?.data?.content ?? ''
   });
   const MdxContent = compiled.body;
   if (!page) notFound();
@@ -60,7 +63,7 @@ export default async function Page(props: {
         <MdxContent
           components={{
             ...defaultMdxComponents,
-            // a: createRelativeLink(source, page),
+            img: (props) => <ImageZoom width={800} height={400} {...(props as any)} />,
           }}
         />
       </DocsBody>

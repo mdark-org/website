@@ -1,4 +1,4 @@
-'use client';
+
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { ReactNode } from 'react';
 import type {SharedProps} from "fumadocs-ui/components/dialog/search";
@@ -18,9 +18,6 @@ import {config} from "../../config";
 export function Provider({ children }: { children: ReactNode }) {
   return (
     <RootProvider
-      search={{
-        // SearchDialog: Orama,
-      }}
     >
       {children}
     </RootProvider>

@@ -39,6 +39,8 @@ const searchTags = [
 
 const defaultSearchTag = undefined
 
+export const tgLink = `https://t.me/mdark_org`
+
 export const config: Config = {
   enableComment: true,
   title: 'MDARK',

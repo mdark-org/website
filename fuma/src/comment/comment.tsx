@@ -2,7 +2,7 @@
 import { Comments as CommentsInternal, CommentsProps } from '@fuma-comment/react'
 import { createUploadThingStorage } from "@fuma-comment/react/uploadthing";
 import { authClient } from '@/lib/auth-client'
-import { usePathname } from 'next/navigation';
+import { usePathname } from 'fumadocs-core/framework';
 
 const signIn = (callbackPath: string) => {
   void authClient.signIn.social({

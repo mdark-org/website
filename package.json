@@ -8,7 +8,7 @@
   "packageManager": "pnpm@10.22.0",
   "devDependencies": {
     "turbo": "^2.5.8",
-    "typescript": "^5.9.3",
-    "@types/node": "^24"
+    "typescript": "npm:@typescript/native-preview",
+    "@types/node": "catalog:"
   }
 }
