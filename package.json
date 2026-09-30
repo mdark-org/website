@@ -5,11 +5,10 @@
     "build": "turbo build --filter=fuma"
   },
   "license": "MIT",
-  "packageManager": "pnpm@11.4.0",
+  "packageManager": "pnpm@12.5.1",
   "devDependencies": {
-    "turbo": "^2.5.8",
-    "@typescript/native-preview": "npm:@typescript/native-preview",
-    "typescript": "^6.0.3",
+    "turbo": "^2.11.5",
+    "typescript": "^7",
     "@types/node": "^24"
   }
 }

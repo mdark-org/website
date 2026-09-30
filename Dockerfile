@@ -7,8 +7,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 WORKDIR /app
 
-COPY --from=dependencies /app/node_modules ./node_modules
-
 COPY . .
 
 RUN corepack enable pnpm && pnpm install --config.minimum-release-age=0 --no-frozen-lockfile;
