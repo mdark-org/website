@@ -1,9 +1,9 @@
-import { slimTree, type BuiltDatasource } from './snapshot.ts'
-import { SourceSyncError, SourceWriteRepo, type DatasourceSnapshot } from '../db/write.repo.ts'
+import { slimTree, type BuiltDatasource } from './snapshot'
+import { SourceSyncError, SourceWriteRepo, type DatasourceSnapshot } from '../db/write.repo'
 import type { Root } from '../types.ts'
-export type { BuiltDatasource } from './snapshot.ts'
-export { SOURCE_HEAD_ID, SourceSyncError, SourceWriteRepo } from '../db/write.repo.ts'
-export type { SyncRun } from '../db/write.repo.ts'
+export type { BuiltDatasource } from './snapshot'
+export { SOURCE_HEAD_ID, SourceSyncError, SourceWriteRepo } from '../db/write.repo'
+export type { SyncRun } from '../db/write.repo'
 
 export function getDatasourceSlug(mountedPath: string): string {
   const slug = mountedPath.split('/').filter(Boolean).pop()
