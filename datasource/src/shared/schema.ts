@@ -2,13 +2,15 @@ import {z} from "zod";
 import parser from 'any-date-parser'
 
 const metaPreprocess = (x: any) => {
-  try {
-    if(!Number.isNaN(Number(x.date)) && String(x.date).length === 10) {
-      x.date  = parser.fromAny(Number(x.date) * 1000)
+  if(x.date !== undefined) {
+    try {
+      if(!Number.isNaN(Number(x.date)) && String(x.date).length === 10) {
+        x.date  = parser.fromAny(Number(x.date) * 1000)
+      }
+      x.date = parser.fromAny(x.date)
+    }catch (e) {
+      x.date = new Date(NaN)
     }
-    x.date = parser.fromAny(x.date)
-  }catch (e) {
-    x.date = new Date(0)
   }
   if(x.tag && !x.tags) {
     x.tags = x.tag
@@ -44,4 +46,3 @@ export const pageSchema = z.object({
     path: z.string()
   }).optional(),
 }).catchall(z.any())
-

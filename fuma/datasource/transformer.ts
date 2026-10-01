@@ -7,6 +7,7 @@ const parserAsDate = <T = null>(x: Date|string | undefined | null, fallback: T |
   if(x === undefined || x === null) return fallback ?? new Date(0) as T
   return x
 }
+
 export const indexFolderTransformer: FolderTransformer = {
   beforeBuildTree: (folder) => {
     const regex = /\d{4}_\d{4}/

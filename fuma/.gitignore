@@ -1,0 +1,5 @@
+/dist/
+.vinext/
+.cloudflare/
+
+.dev.vars

@@ -1,6 +1,6 @@
 
 import { buttonVariants } from '@/components/ui/button';
-import { config } from 'config';
+import { config } from '../../../config/index';
 import Link from 'fumadocs-core/link';
 import { source } from '@/lib/source';
 import PageItem from '@/components/page-item';
@@ -8,6 +8,8 @@ import { Metadata } from 'next';
 
 const gridColor =
 'color-mix(in oklab, var(--color-fd-primary) 10%, transparent)';
+
+export const revalidate = 600
 
 export const metadata: Metadata = {
   title: 'MDARK',
@@ -118,5 +120,5 @@ async function Recent() {
       ))}
     </div>
   );
-  
+
 }

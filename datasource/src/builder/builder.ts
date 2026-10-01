@@ -57,8 +57,7 @@ export class SourceBuilder {
     return cur
   }
 
-  async buildFolders() {
-    const {folderPaths} = await this.fsProvider.getFiles()
+  async buildFolders(folderPaths: string[]) {
     const folderMap = new Map<string,Folder>()
     for (const path of folderPaths) {
       const folder = {
@@ -81,25 +80,16 @@ export class SourceBuilder {
       let folder = folders.pop()!
       const children = folders
         .filter(it => it.depth === folder.depth + 1)
-        .filter(it => it.url.startsWith(folder.url))
+        .filter(it => it.url.startsWith(`${folder.url}/`))
       folder.children = [...folder.children, ...children]
     }
   }
 
-  async fulfillFolders(folderMap: Map<string, Folder>) {
+  async fulfillFolders(folderMap: Map<string, Folder>, filePaths: VFilePath[]) {
     const pageMap = new Map<string, Page>
-    const {filePaths} = await this.fsProvider.getFiles()
     const handlerVFilePath = async (vFilePath: typeof filePaths[number]) => {
-      let page
-      try {
-        page = await this.VFileToPage(<VFilePath>vFilePath, this.root)
-      }catch (e: any) {
-        console.log(`failed to generate page for ${vFilePath.key}, ${e?.message}`)
-      }
-      if(!page) {
-        return {vFilePath}
-      }
-      page = this.applyPageTransformer(page)
+      const source = await this.fsProvider.getVFileContent(vFilePath)
+      const page = this.applyPageTransformer(this.VFileToPage(vFilePath, source))
       const {content, ...rest} = page.data!
       let pageWithoutContent = { ...page, data: rest }
 
@@ -113,8 +103,8 @@ export class SourceBuilder {
     const res = await Promise.all(filePaths.map(it => handlerVFilePath(it)))
     for (const item of res) {
       const { page, pageWithoutContent, vFilePath } = item
-      if(!page) {
-        continue
+      if (pageMap.has(page.url)) {
+        throw new Error(`Duplicate page URL: ${page.url}`)
       }
       const folder = folderMap.get(vFilePath.path)!
       // @ts-ignore
@@ -124,15 +114,9 @@ export class SourceBuilder {
     return pageMap
   }
 
-  private async VFileToPage(vFileMeta: VFilePath, root: Root): Promise<Page | null> {
-    const item = await this.fsProvider.getVFileContent(vFileMeta)
-    const frontmatter = matter(item as string)
+  private VFileToPage(vFileMeta: VFilePath, item: string): Page {
+    const frontmatter = matter(item)
     const data = metaSchema.parse(frontmatter.data)
-    // if(!parsed.success) {
-    //   console.log(parsed.error.message)
-    //   return null
-    // }
-    // const {data} = parsed
     const [owner, repo] = (this.source.github?.repo ?? '/').split('/')
     return {
       url: vFileMeta.url,
@@ -153,13 +137,14 @@ export class SourceBuilder {
 
   async build() {
     console.log("start build folder")
-    const folderMap = await this.buildFolders()
+    const { folderPaths, filePaths } = await this.fsProvider.getFiles()
+    const folderMap = await this.buildFolders(folderPaths)
     console.log("start build folder tree")
     // add root to folderMap
     folderMap.set(this.root.url, this.root as Folder)
     await this.buildFolderTree(folderMap)
     console.log("start fulfill folder tree")
-    const pageMap = await this.fulfillFolders(folderMap)
+    const pageMap = await this.fulfillFolders(folderMap, filePaths)
     folderMap.values().forEach(it => {
       this.applyFolderTransformer(it, 'after-build-tree')
     })

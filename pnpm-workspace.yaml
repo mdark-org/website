@@ -14,7 +14,7 @@ catalog:
   vite-plus: latest
   vitest: npm:@voidzero-dev/vite-plus-test@latest
   zod: ^4
-  typescript: "npm:@typescript/native-preview"
+  typescript: ^7
   "@types/node": ^24
 catalogs:
   react:
@@ -31,8 +31,11 @@ catalogs:
     "tailwindcss": "^4.3.0"
 minimumReleaseAgeExclude:
   - tsdown@0.22.1
+  - '@cloudflare/workers-types@5.20260930.2'
 patchedDependencies:
   fumadocs-core: patches/fumadocs-core.patch
+  vinext: patches/vinext.patch
 
 overrides:
   '@types/hast': 3.0.5
+  drizzle-orm: 1.0.0-rc.4

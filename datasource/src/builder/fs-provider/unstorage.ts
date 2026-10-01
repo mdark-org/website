@@ -47,8 +47,10 @@ export class UnStorageSourceBuilder implements FSProvider {
 
   async getVFileContent(vfile: VFilePath) {
       const item = await limit(() => this.storage.getItem(vfile.key))
-      return item as string
+      if (typeof item !== 'string') {
+        throw new Error(`Expected Markdown content for ${vfile.key}`)
+      }
+      return item
   }
 
 }
-

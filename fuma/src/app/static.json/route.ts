@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import { source } from '@/lib/source';
 import { structure } from 'fumadocs-core/mdx-plugins';
 
-export const revalidate = false;
+export const revalidate = 3600;
 
 export async function GET(): Promise<Response> {
-  const pages = await source.getContentPages();
+  const pages = await source.getContentPages({ content: true });
   const results = await Promise.all(
     pages.flatMap(async (page) => {
       const structuredData = structure(page.data?.content!);

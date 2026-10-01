@@ -2,7 +2,7 @@ import { cn } from '@/lib/cn';
 import { Page } from '@repo/datasource/shared';
 import Link from 'fumadocs-core/link';
 import React from 'react';
-import {parserAsDate} from "@/lib/source";
+import {parserAsDate} from "@/lib/date";
 
 type PageItemProps = {
   data: Page;

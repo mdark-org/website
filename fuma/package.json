@@ -14,11 +14,13 @@
     "d1:migrate:local": "cf d1 migrations apply 80dc84e5-2a47-4ff0-95d2-4a372aaeeb9c --local --persist-to .cloudflare/state --dir drizzle/d1",
     "d1:sync": "node --env-file=.env scripts/sync.ts",
     "db:gen:d1": "drizzle-kit generate --config drizzle.d1.config.ts && node scripts/sync-d1-migration.ts",
-    "dev:vinext": "vite dev --port 3001",
+    "dev:vinext": "vite dev",
     "build:vinext": "vite build",
     "start:vinext": "vite preview",
-    "deploy:vinext": "vinext-cloudflare deploy --warm-cache",
-    "deploy:response-store": "cf deploy --prebuilt --mode production --worker fuma-response-store"
+
+    "deploy:vinext": "vinext-cloudflare deploy",
+    "deploy:response-store": "cf deploy --prebuilt --mode production --worker fuma-response-store",
+    "deploy:fuma-sync": "cf deploy --prebuilt --mode production --worker fuma-sync"
   },
   "type": "module",
   "dependencies": {
@@ -62,6 +64,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "2.0.0-beta.sha-ad79608dd",
+    "@cloudflare/workers-types": "^5.20260930.2",
     "@repo/datasource": "workspace:*",
     "@tailwindcss/postcss": "^4.3.0",
     "@tailwindcss/vite": "^4.3.3",
@@ -80,6 +83,8 @@
     "react-medium-image-zoom": "^5.4.5",
     "serialize-javascript": "7.0.5",
     "tailwindcss": "^4.3.3",
+    "use-sync-external-store": "^1.7.0",
+    "use-sync-external-store-with-selector": "^0.1.1",
     "vite": "8.3.0"
   }
 }

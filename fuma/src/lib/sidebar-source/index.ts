@@ -1,67 +1,37 @@
-import sources from ".source/generated/sidebar/index.mjs";
-import { Root } from "@repo/datasource/shared";
-import { icons } from "lucide-react";
-import { createElement } from "react";
-import { sidebarDatasourceSchema } from "@/lib/sidebar-source/schema";
+import type { DatasourceInfo, Root } from '@repo/source'
+import { icon } from '@/lib/source/icon'
+import { getReader } from '@/lib/source/reader'
 
-const icon = (icon: any) => {
-  if (!icon) return;
-  if (icon in icons) return createElement(icons[icon as keyof typeof icons]);
-  return createElement("img", { src: icon, className: "w-5 h-5" });
-};
-
-type SidebarDatasource = {
-  pageTree: Root;
-  datasourceInfo: {
-    id: string;
-    [x: string]: any;
-  };
-};
-
-const sourceMap = sources as Record<string, unknown>;
-
-const datasources =
-  Object.keys(sourceMap)
-    .map((key) => {
-      const item = sourceMap[key]
-      return sidebarDatasourceSchema.parse(item)
-    })
-    .map((it) => {
-      const i = it
-      return {
-        ...it,
-        pageTree: {
-          ...it.pageTree,
-          icon: icon(it.pageTree.icon),
-        },
-      }
-    }) as SidebarDatasource[];
-
-const tree = {
-  name: "root",
-  children: datasources.map((it) => it.pageTree),
-} satisfies { name: string; children: Root[] };
-
-const shrinkRoot = (root: Root): Root => ({
-  ...root,
+/** A datasource reduced to its root node (no children): cheap, and needs no tree query. */
+const stub = (d: DatasourceInfo): Root => ({
+  type: 'folder',
+  root: true,
+  name: d.name,
+  title: d.name,
+  url: d.mountedPath,
+  description: d.description,
+  icon: icon(d.icon),
+  depth: d.mountedPath.split('/').length - 1,
   children: [],
-});
+})
 
 export const sidebarSource = {
-  tree,
-  getSidebarTreeBySlug(slug?: string[]) {
-    if (!slug || slug.length === 0) return tree;
+  /**
+   * `slug` is the route's catch-all segments (without `docs`). Only the active datasource
+   * gets its full tree; the others are collapsed roots, which keeps the RSC payload small.
+   */
+  async getSidebarTree(slug?: string[]) {
+    const reader = getReader()
+    const datasources = await reader.listDatasource()
+    // const activeUrl = slug?.[0] ? `/docs/${slug[0]}` : undefined
 
-    const category = slug[0];
-    const activeUrl = `/docs/${category}`;
-    const active = datasources.find((it) => it.pageTree.url === activeUrl);
-    if (!active) return tree;
-
-    return {
-      ...tree,
-      children: datasources.map((it) =>
-        it.datasourceInfo.id === active.datasourceInfo.id ? it.pageTree : shrinkRoot(it.pageTree),
-      ),
-    };
+    const children = await Promise.all(
+      datasources.map(async (d) => {
+        // if (d.mountedPath !== activeUrl) return stub(d)
+        const tree = await reader.getPageTree(d.id)
+        return tree ? { ...tree, icon: icon(tree.icon) } : stub(d)
+      }),
+    )
+    return { name: 'root', children }
   },
-};
+}
