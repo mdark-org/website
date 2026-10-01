@@ -1,19 +1,18 @@
 import { slimTree, type BuiltDatasource } from './snapshot'
 import { SourceSyncError, SourceWriteRepo, type DatasourceSnapshot } from '../db/write.repo'
 import type { Root } from '../types.ts'
-export type { BuiltDatasource } from './snapshot'
+import { hash } from './hash'
+import { parsePageSections, SECTION_PARSER_VERSION } from './sections'
+export type { BuiltDatasource } from './snapshot.ts'
 export { SOURCE_HEAD_ID, SourceSyncError, SourceWriteRepo } from '../db/write.repo'
 export type { SyncRun } from '../db/write.repo'
+export { parsePageSections, SECTION_PARSER_VERSION } from './sections'
+export { backfillPageSections } from './backfill'
 
 export function getDatasourceSlug(mountedPath: string): string {
   const slug = mountedPath.split('/').filter(Boolean).pop()
   if (!slug) throw new SourceSyncError('The datasource mount must have a slug.')
   return slug
-}
-
-async function hash(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 
 export async function syncDatasource(repo: SourceWriteRepo, runId: number, built: BuiltDatasource, options: { sortOrder?: number } = {}) {
@@ -28,21 +27,26 @@ export async function syncDatasource(repo: SourceWriteRepo, runId: number, built
     tree: slimTree(built.pageTree),
     bodies: [],
     revisions: [],
+    sections: [],
     refs: [],
   }
   const urls = new Set<string>()
+  const sourceKeys = new Set<string>()
+  const bodies = new Map<string, string>()
   for (const [url, page] of built.pageMap) {
     if (page.external) continue
-    if (url !== page.url || urls.has(page.url) || typeof page.data?.content !== 'string') {
-      throw new SourceSyncError(`Invalid page content or URL: ${url}`)
+    if (url !== page.url || urls.has(page.url) || typeof page.data?.content !== 'string'
+      || typeof page.sourceKey !== 'string' || !page.sourceKey || sourceKeys.has(page.sourceKey)) {
+      throw new SourceSyncError(`Invalid page content, source key or URL: ${url}`)
     }
     urls.add(page.url)
+    sourceKeys.add(page.sourceKey)
     const data = page.data
     const markdown = page.data.content
     const date = data.date?.getTime()
     const publishedAt = date !== undefined && Number.isFinite(date) ? date : 0
     const contentHash = await hash(markdown)
-    const sourceKey = JSON.stringify([info.id, page.url])
+    const sourceKey = JSON.stringify([info.id, page.sourceKey])
     const revision = {
       sourceKey,
       contentHash,
@@ -61,9 +65,10 @@ export async function syncDatasource(repo: SourceWriteRepo, runId: number, built
       ext: page.ext ?? null,
       publishedAt,
     }
-    const sourceHash = await hash(JSON.stringify(['source-build-v1', revision]))
+    const sourceHash = await hash(JSON.stringify(['source-build-v2', SECTION_PARSER_VERSION, revision]))
     const revisionId = await hash(JSON.stringify([sourceKey, sourceHash]))
     snapshot.bodies.push({ hash: contentHash, markdown })
+    bodies.set(contentHash, markdown)
     snapshot.revisions.push({ ...revision, sourceHash, revisionId })
     snapshot.refs.push({ revisionId, url: page.url, publishedAt })
   }
@@ -77,5 +82,17 @@ export async function syncDatasource(repo: SourceWriteRepo, runId: number, built
     node.children.forEach(checkTree)
   }
   checkTree(snapshot.tree)
-  return repo.writeDatasource(runId, snapshot)
+  const completed = await repo.getSectionRevisionIds(snapshot.revisions.map((revision) => revision.revisionId))
+  for (const revision of snapshot.revisions) {
+    if (completed.has(revision.revisionId)) continue
+    const markdown = bodies.get(revision.contentHash)
+    if (markdown === undefined) throw new SourceSyncError(`Missing page body: ${revision.url}`)
+    try {
+      snapshot.sections.push(await parsePageSections({ pageRevisionId: revision.revisionId, sourceKey: revision.sourceKey, markdown }))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      throw new SourceSyncError(`Could not parse page sections for ${revision.url}: ${message}`, { cause: error })
+    }
+  }
+  return { ...await repo.writeDatasource(runId, snapshot), parsedPages: snapshot.sections.length }
 }

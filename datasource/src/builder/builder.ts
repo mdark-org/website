@@ -89,7 +89,10 @@ export class SourceBuilder {
     const pageMap = new Map<string, Page>
     const handlerVFilePath = async (vFilePath: typeof filePaths[number]) => {
       const source = await this.fsProvider.getVFileContent(vFilePath)
-      const page = this.applyPageTransformer(this.VFileToPage(vFilePath, source))
+      const page = {
+        ...this.applyPageTransformer(this.VFileToPage(vFilePath, source)),
+        sourceKey: vFilePath.key,
+      }
       const {content, ...rest} = page.data!
       let pageWithoutContent = { ...page, data: rest }
 
@@ -120,6 +123,7 @@ export class SourceBuilder {
     const [owner, repo] = (this.source.github?.repo ?? '/').split('/')
     return {
       url: vFileMeta.url,
+      sourceKey: vFileMeta.key,
       name: data.title ?? vFileMeta.filename!,
       title: data.title ?? vFileMeta.filename!,
       type: 'page' as const,

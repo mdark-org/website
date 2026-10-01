@@ -6,12 +6,23 @@
   "description": "Content database (Cloudflare D1 via drizzle-orm): schema, read API for the app, and the sync that writes it. Migrations are generated in `fuma` (fuma/drizzle.d1.config.ts).",
   "exports": {
     ".": "./src/index.ts",
+    "./markdown": "./src/markdown.ts",
     "./sync": "./src/sync/index.ts"
   },
   "scripts": {
-    "test": "node --test test/*.test.ts"
+    "test": "node --import ./test/register.mjs --test test/*.test.ts"
   },
   "dependencies": {
-    "drizzle-orm": "catalog:drizzle"
+    "drizzle-orm": "catalog:drizzle",
+    "fumadocs-core": "catalog:fumadocs",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.1.0",
+    "vfile": "^6.0.3"
+  },
+  "devDependencies": {
+    "@types/mdast": "^4.0.4",
+    "miniflare": "^4"
   }
 }

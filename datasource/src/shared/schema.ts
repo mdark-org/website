@@ -34,6 +34,7 @@ export const metaSchema = z.preprocess(metaPreprocess, z.object({
 
 export const pageSchema = z.object({
   url: z.string(),
+  sourceKey: z.string().optional(),
   name: z.string(),
   title: z.string(),
   type: z.literal('page'),

@@ -26,6 +26,8 @@ export interface Page {
   title: string
   type: 'page'
   external?: boolean
+  /** Provider key. It does not depend on the public URL. */
+  sourceKey?: string
   filename?: string
   ext?: string
   datasourceId?: number

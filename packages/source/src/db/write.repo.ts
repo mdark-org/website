@@ -1,8 +1,8 @@
-import { and, eq, inArray, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
 import type { BatchItem } from 'drizzle-orm/batch'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
-import { pageContent, pageRef, pageRevision } from './schema/content'
-import { datasource, sourceHeads, syncRun } from './schema/sync'
+import { pageContent, pageRef, pageRevision, pageSection, type PageSections } from './schema/content.ts'
+import { datasource, sourceHeads, syncRun } from './schema/sync.ts'
 
 export const SOURCE_HEAD_ID = 'current'
 const MAX_PARAMETERS = 90
@@ -15,6 +15,7 @@ export type SyncRun = typeof syncRun.$inferSelect
 export type DatasourceSnapshot = Omit<typeof datasource.$inferInsert, 'id' | 'syncRunId'> & {
   bodies: (typeof pageContent.$inferInsert)[]
   revisions: (typeof pageRevision.$inferInsert)[]
+  sections: PageSections[]
   refs: Pick<typeof pageRef.$inferInsert, 'revisionId' | 'url' | 'publishedAt'>[]
 }
 
@@ -61,19 +62,62 @@ export class SourceWriteRepo {
     return run
   }
 
+  async getSectionRevisionIds(revisionIds: string[]): Promise<Set<string>> {
+    const completed = new Set<string>()
+    for (const group of chunks(revisionIds, 1)) {
+      const rows = await this.db.select({ id: pageSection.pageRevisionId }).from(pageSection)
+        .where(and(inArray(pageSection.pageRevisionId, group), sql`${pageSection.ordinal} = 0`))
+      rows.forEach((row) => completed.add(row.id))
+    }
+    return completed
+  }
+
+  async listRevisionsWithoutSections(limit: number) {
+    return this.db.select({
+      pageRevisionId: pageRevision.revisionId,
+      sourceKey: pageRevision.sourceKey,
+      markdown: pageContent.markdown,
+    }).from(pageRevision)
+      .innerJoin(pageContent, eq(pageContent.hash, pageRevision.contentHash))
+      .leftJoin(pageSection, and(eq(pageSection.pageRevisionId, pageRevision.revisionId), sql`${pageSection.ordinal} = 0`))
+      .where(isNull(pageSection.pageRevisionId))
+      .orderBy(pageRevision.revisionId).limit(limit)
+  }
+
+  private sectionStatements(sections: PageSections): [BatchItem<'sqlite'>, ...BatchItem<'sqlite'>[]] {
+    const statements: [BatchItem<'sqlite'>, ...BatchItem<'sqlite'>[]] = [
+      this.db.delete(pageSection).where(eq(pageSection.pageRevisionId, sections[0].pageRevisionId)),
+    ]
+    for (const group of chunks(sections, 11)) statements.push(this.db.insert(pageSection).values(group))
+    return statements
+  }
+
+  async writePageSections(sections: PageSections): Promise<void> {
+    await this.db.batch(this.sectionStatements(sections))
+  }
+
   async writeDatasource(runId: number, snapshot: DatasourceSnapshot): Promise<{ datasourceId: number; pages: number }> {
     const run = await this.requireRunning(runId)
     if (!run.datasourceIds.includes(snapshot.slug)) {
       throw new SourceSyncError(`Datasource ${snapshot.slug} is not part of sync run ${runId}.`)
     }
-    const { bodies, revisions, refs, ...info } = snapshot
+    const { bodies, revisions, sections, refs, ...info } = snapshot
 
     // These rows are immutable and reusable. Partial inserts are not visible without a published ref.
     for (const group of chunks(bodies, 2)) {
       await this.db.insert(pageContent).values(group).onConflictDoNothing()
     }
+    const sectionsByRevision = new Map(sections.map((items) => [items[0].pageRevisionId, items]))
     for (const group of chunks(revisions, 13)) {
-      await this.db.insert(pageRevision).values(group).onConflictDoNothing()
+      const statements: [BatchItem<'sqlite'>, ...BatchItem<'sqlite'>[]] = [
+        this.db.insert(pageRevision).values(group).onConflictDoNothing(),
+      ]
+      for (const revision of group) {
+        const items = sectionsByRevision.get(revision.revisionId)
+        if (items) statements.push(...this.sectionStatements(items))
+      }
+      // The root row marks a complete section set. Never commit it without the other sections.
+      await this.db.batch(statements)
     }
 
     const previousIds = this.db.select({ id: datasource.id }).from(datasource)
@@ -109,6 +153,10 @@ export class SourceWriteRepo {
     const duplicate = await this.db.select({ url: pageRef.url }).from(pageRef)
       .where(eq(pageRef.syncRunId, runId)).groupBy(pageRef.url).having(sql`count(*) > 1`).get()
     if (duplicate) throw new SourceSyncError(`Duplicate page URL: ${duplicate.url}`)
+    const incomplete = await this.db.select({ url: pageRef.url }).from(pageRef)
+      .leftJoin(pageSection, and(eq(pageSection.pageRevisionId, pageRef.revisionId), sql`${pageSection.ordinal} = 0`))
+      .where(and(eq(pageRef.syncRunId, runId), isNull(pageSection.pageRevisionId))).get()
+    if (incomplete) throw new SourceSyncError(`Missing page sections: ${incomplete.url}`)
 
     const now = Date.now()
     await this.db.batch([

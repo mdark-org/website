@@ -1,10 +1,10 @@
-export * from './content'
-export * from './sync'
+export * from './content.ts'
+export * from './sync.ts'
 
 import { defineRelations } from 'drizzle-orm'
 import type { drizzle } from 'drizzle-orm/d1'
-import * as sync from './sync'
-import * as content from './content'
+import * as sync from './sync.ts'
+import * as content from './content.ts'
 
 export const schema = { ...sync, ...content }
 
@@ -67,6 +67,17 @@ export const relations = defineRelations(schema, (r) => ({
     pageRefs: r.many.pageRef({
       from: r.pageRevision.revisionId,
       to: r.pageRef.revisionId,
+    }),
+    sections: r.many.pageSection({
+      from: r.pageRevision.revisionId,
+      to: r.pageSection.pageRevisionId,
+    }),
+  },
+  pageSection: {
+    revision: r.one.pageRevision({
+      from: r.pageSection.pageRevisionId,
+      to: r.pageRevision.revisionId,
+      optional: false,
     }),
   },
   pageContent: {

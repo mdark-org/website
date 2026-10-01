@@ -1,17 +1,11 @@
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
-import remarkGfm from 'remark-gfm';
+import { createMarkdownParser } from '@repo/source/markdown';
 import remarkRehype from 'remark-rehype';
-import { remarkHeading } from 'fumadocs-core/mdx-plugins/remark-heading';
 import { rehypeCode } from 'fumadocs-core/mdx-plugins/rehype-code';
 import { toJsxRuntime, type Options } from 'hast-util-to-jsx-runtime';
 import { Fragment, jsx, jsxs } from 'react/jsx-runtime';
 import { VFile } from 'vfile';
 
-const processor = unified()
-  .use(remarkParse)
-  .use(remarkGfm)
-  .use(remarkHeading)
+const processor = createMarkdownParser()
   .use(remarkRehype)
   .use(rehypeCode);
 

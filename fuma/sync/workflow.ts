@@ -4,7 +4,7 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from 'cloudflare:workers';
 import { NonRetryableError } from 'cloudflare:workflows';
 import { SourceBuilder } from '@repo/datasource/build';
-import { getDatasourceSlug, SourceSyncError, SourceWriteRepo, syncDatasource } from '@repo/source/sync';
+import { backfillPageSections, getDatasourceSlug, SourceSyncError, SourceWriteRepo, syncDatasource } from '@repo/source/sync';
 import { drizzle } from 'drizzle-orm/d1';
 import { datasources } from '../datasource/index.ts';
 import type { SyncEnv, SyncParams } from './types.ts';
@@ -41,6 +41,14 @@ export class SourceSyncWorkflow extends WorkflowEntrypoint<SyncEnv, SyncParams> 
           return syncDatasource(repo, runId, built, { sortOrder });
         }));
         results.push(result);
+      }
+
+      for (let batch = 0; ; batch++) {
+        const result = await step.do(`backfill-sections-${batch}`, {
+          retries: { limit: 3, delay: '10 seconds', backoff: 'exponential' },
+          timeout: '5 minutes',
+        }, () => backfillPageSections(repo));
+        if (result.revisions === 0) break;
       }
 
       await step.do('publish-run', () => stopOnSyncError(() => repo.publishRun(runId)));
