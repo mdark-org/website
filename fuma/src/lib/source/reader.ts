@@ -1,7 +1,5 @@
 import { env } from 'cloudflare:workers'
-import { SourceReadRepo, type ISourceReadRepo } from '@repo/source'
-import { relations } from '@repo/source'
-import { drizzle } from 'drizzle-orm/d1'
+import {SourceReadRepo, type ISourceReadRepo, createDB} from '@repo/source'
 
 let reader: ISourceReadRepo | undefined
 
@@ -10,5 +8,5 @@ let reader: ISourceReadRepo | undefined
  * Lazy, because `vite build` has no bindings.
  */
 export function getReader(): ISourceReadRepo {
-  return (reader ??= new SourceReadRepo(drizzle((env as any).DB, { relations })))
+  return (reader ??= new SourceReadRepo(createDB(env.DB)))
 }

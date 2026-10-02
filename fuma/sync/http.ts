@@ -2,8 +2,7 @@ import { getDatasourceSlug, SourceWriteRepo } from '@repo/source/sync';
 import { datasources } from '../datasource/index.ts';
 import type { SyncEnv } from './types.ts';
 import { Hono } from 'hono';
-import { relations } from '@repo/source';
-import { drizzle } from 'drizzle-orm/d1';
+import { createDB } from '@repo/source';
 import z from 'zod';
 
 type Variables = {
@@ -21,7 +20,7 @@ export const app = new Hono<{
       return c.json({ error: 'Unauthorized.' }, { status: 401 });
     }
 
-    c.set('repo', new SourceWriteRepo(drizzle(env.DB, {relations})))
+    c.set('repo', new SourceWriteRepo(createDB(env.DB)))
 
     await next();
   })
@@ -42,7 +41,7 @@ export const app = new Hono<{
     });
   })
   .get('/sync/:id', async (c) => {
-    const { data, success } = z.number().safeParse(c.req.param('id'))
+    const { data, success } = z.coerce.number().int().positive().safeParse(c.req.param('id'))
     if (!success) return c.notFound();
     const repo = c.get('repo')
     const run = await repo.getRun(data);

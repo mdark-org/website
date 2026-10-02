@@ -1,10 +1,10 @@
-export * from './content.ts'
-export * from './sync.ts'
+export * from './content'
+export * from './sync'
 
 import { defineRelations } from 'drizzle-orm'
-import type { drizzle } from 'drizzle-orm/d1'
-import * as sync from './sync.ts'
-import * as content from './content.ts'
+import { drizzle } from 'drizzle-orm/d1'
+import * as sync from './sync'
+import * as content from './content'
 
 export const schema = { ...sync, ...content }
 
@@ -70,12 +70,12 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     sections: r.many.pageSection({
       from: r.pageRevision.revisionId,
-      to: r.pageSection.pageRevisionId,
+      to: r.pageSection.revisionId,
     }),
   },
   pageSection: {
     revision: r.one.pageRevision({
-      from: r.pageSection.pageRevisionId,
+      from: r.pageSection.revisionId,
       to: r.pageRevision.revisionId,
       optional: false,
     }),
@@ -89,3 +89,5 @@ export const relations = defineRelations(schema, (r) => ({
 }))
 
 export type DB = ReturnType<typeof drizzle<typeof relations>>
+
+export const createDB = (db: D1Database) => drizzle(db, { relations })

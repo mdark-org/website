@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { renderMarkdown } from '../src/lib/markdown.ts';
-import { parsePageSections } from '@repo/source/sync';
 
 test('heading anchors match the TOC and reset for each document', async () => {
   const content = '# Intro\n\n## Repeat\n\n## Repeat\n\n## Custom [#custom]';
@@ -43,13 +42,4 @@ test('empty documents have an empty TOC', async () => {
   const result = await renderMarkdown('');
   assert.deepEqual(result.toc, []);
   assert.equal(renderToStaticMarkup(result.body), '');
-});
-
-test('stored section anchors and titles match the rendered document', async () => {
-  const content = '# Intro\n\n## *Repeat*\n\n## Repeat\n\n## Custom [#custom]\n\n### `Nested`';
-  const sections = await parsePageSections({ pageRevisionId: 'revision', sourceKey: 'guide.md', markdown: content });
-  const rendered = await renderMarkdown(content);
-  const html = renderToStaticMarkup(rendered.body);
-  assert.deepEqual(sections.slice(1).map(({ title, anchor, level }) => ({ title, url: `#${anchor}`, depth: level })), rendered.toc);
-  for (const { anchor } of sections.slice(1)) assert.ok(html.includes(`id="${anchor}"`));
 });

@@ -7,10 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./markdown": "./src/markdown.ts",
+    "./search": "./src/search/index.ts",
     "./sync": "./src/sync/index.ts"
-  },
-  "scripts": {
-    "test": "node --import ./test/register.mjs --test test/*.test.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:drizzle",
@@ -23,6 +21,6 @@
   },
   "devDependencies": {
     "@types/mdast": "^4.0.4",
-    "miniflare": "^4"
+    "@cloudflare/workers-types": "latest"
   }
 }

@@ -2,12 +2,11 @@ import type { Root } from "../../types";
 import { integer, sqliteTable, text, foreignKey,index } from "drizzle-orm/sqlite-core";
 
 
-/** One run covers the complete configured datasource set. */
 export const syncRun = sqliteTable('sync_runs', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   baseRunId: integer('base_run_id'),
   datasourceIds: text('datasource_ids', { mode: 'json' }).$type<string[]>().notNull(),
-  status: text('status', { enum: ['queued', 'running', 'ready', 'succeeded', 'superseded', 'failed'] }).notNull(),
+  status: text('status', { enum: ['queued', 'running', 'succeeded', 'failed'] }).notNull(),
   createdAt: integer('created_at').notNull(),
   startedAt: integer('started_at'),
   finishedAt: integer('finished_at'),
@@ -18,7 +17,7 @@ export const syncRun = sqliteTable('sync_runs', {
 ])
 
 
-// 管理端定义 datasource 的目标
+// A datasource snapshot belongs to one sync run.
 export const datasource = sqliteTable('datasources', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   slug: text('slug').notNull(),
@@ -33,9 +32,13 @@ export const datasource = sqliteTable('datasources', {
   index('datasource_snapshots_datasource').on(t.slug),
 ])
 
-// 单行，当前指向的 syncRunId
+/** One run covers the complete configured datasource set. */
+export type SearchSlotId = 'a' | 'b'
+
+// Current published content run and its matching AI Search slot.
 export const sourceHeads = sqliteTable('source_heads', {
   id: text('id').notNull().primaryKey(),
   syncRunId: integer('sync_run_id').notNull(),
+  searchSlot: text('search_slot', { enum: ['a', 'b'] }).notNull().default('a'),
   publishedAt: integer('published_at').notNull(),
 })
