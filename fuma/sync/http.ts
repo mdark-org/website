@@ -2,31 +2,27 @@ import { getDatasourceSlug, SourceWriteRepo } from '@repo/source/sync';
 import { datasources } from '../datasource/index.ts';
 import type { SyncEnv } from './types.ts';
 import { Hono } from 'hono';
-import { createDB } from '@repo/source';
 import z from 'zod';
-
+import {env} from 'cloudflare:workers'
 type Variables = {
   repo: SourceWriteRepo;
 }
-export const app = new Hono<{
+export const syncApp = new Hono<{
   Bindings: SyncEnv;
   Variables: Variables
 }>()
   .use('*', async (c, next) => {
-    const env = c.env
+    // const env = c.env
     const token = env.SYNC_TOKEN
     if (!token) return c.json({ error: 'Sync authentication is not configured.' }, { status: 503 });
     if (c.req.header('Authorization') !== `Bearer ${token}`) {
       return c.json({ error: 'Unauthorized.' }, { status: 401 });
     }
-
-    c.set('repo', new SourceWriteRepo(createDB(env.DB)))
-
+    c.set('repo', new SourceWriteRepo(c.get('db')))
     await next();
   })
   .post('/sync', async (c) => {
     const repo = c.get('repo')
-    const env = c.env
     const run = await repo.createRun(datasources.map((source) => getDatasourceSlug(source.mountedPath)));
     const workflowId = `sync-${run.id}`;
     try {

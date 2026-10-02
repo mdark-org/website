@@ -12,7 +12,7 @@ const responseStore = await createWorkersResponseStoreServiceBindingConfig({
 
 export const responseStoreServiceBinding = responseStore.serviceBindingWorker;
 
-const databaseId = process.env.D1_DATABASE_ID;
+const databaseId = process.env.D1_DATABASE_ID ?? "b1f902ea-c16a-4850-b8a8-f93476167bec";
 
 const aiSearchNamespace = 'mdark'
 export const syncWorker = defineWorker({
@@ -26,7 +26,7 @@ export const syncWorker = defineWorker({
     SourceSyncWorkflow: workerExports.workflow({ name: "fuma-source-sync" }),
   },
   env: {
-    DB: bindings.d1({ name: "mdark-dev-source" }),
+    DB: bindings.d1({ name: "mdark-dev-source", id: databaseId }),
     AI_SEARCH: bindings.aiSearchNamespace({ namespace: aiSearchNamespace }),
     SEARCH_MANIFESTS: bindings.r2({ name: 'fuma-search-manifests' }),
     SYNC_WORKFLOW: bindings.workflow({
@@ -39,7 +39,6 @@ export const syncWorker = defineWorker({
     BASE_URL: bindings.secret(),
   },
 });
-
 export default defineConfig({
   worker: defineWorker({
     ...responseStore.applicationWorker,
@@ -56,6 +55,14 @@ export default defineConfig({
       ASSETS: bindings.assets(),
       IMAGES: bindings.images(),
       DATABASE_URL: bindings.secret(),
+      SYNC_WORKFLOW: bindings.workflow({
+        name: "fuma-source-sync",
+        worker: "fuma-sync",
+        exportName: "SourceSyncWorkflow",
+      }),
+      SYNC_TOKEN: bindings.secret(),
+      GITHUB_TOKEN: bindings.secret(),
+      BASE_URL: bindings.secret(),
       // Read-only content database; written by the sync Worker (@repo/source).
       // The fixed id is the *local* database (`pnpm d1:migrate:local`), so `vite dev` and the `cf d1 --local`
       // commands share one file under .cloudflare/state. Deploys override it with the real database id.

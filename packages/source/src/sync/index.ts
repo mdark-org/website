@@ -7,7 +7,6 @@ export type { BuiltDatasource } from './snapshot.ts'
 export { SOURCE_HEAD_ID, SourceSyncError, SourceWriteRepo } from '../db/write.repo'
 export type { SyncRun } from '../db/write.repo'
 export { parsePageSections, SECTION_PARSER_VERSION } from './sections'
-export { backfillPageSections } from './backfill'
 
 export function getDatasourceSlug(mountedPath: string): string {
   const slug = mountedPath.split('/').filter(Boolean).pop()
@@ -88,7 +87,10 @@ export async function syncDatasource(repo: SourceWriteRepo, runId: number, built
     const markdown = bodies.get(revision.contentHash)
     if (markdown === undefined) throw new SourceSyncError(`Missing page body: ${revision.url}`)
     try {
-      snapshot.sections.push(await parsePageSections({ pageRevisionId: revision.revisionId, sourceKey: revision.sourceKey, markdown }))
+      snapshot.sections.push({
+        revisionId: revision.revisionId,
+        items: await parsePageSections({ revisionId: revision.revisionId, markdown }),
+      })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       throw new SourceSyncError(`Could not parse page sections for ${revision.url}: ${message}`, { cause: error })

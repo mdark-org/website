@@ -1,68 +1,171 @@
-
 /// <reference types="@cloudflare/workers-types" />
 
-import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from 'cloudflare:workers';
-import { NonRetryableError } from 'cloudflare:workflows';
-import { SourceBuilder } from '@repo/datasource/build';
-import { backfillPageSections, getDatasourceSlug, SourceSyncError, SourceWriteRepo, syncDatasource } from '@repo/source/sync';
-import { drizzle } from 'drizzle-orm/d1';
-import { datasources } from '../datasource/index.ts';
-import type { SyncEnv, SyncParams } from './types.ts';
-import { relations } from '@repo/source'
+import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep, type WorkflowStepConfig } from 'cloudflare:workers'
+import { NonRetryableError } from 'cloudflare:workflows'
+import { SourceBuilder } from '@repo/datasource/build'
+import { getDatasourceSlug, SourceSyncError, SourceWriteRepo, syncDatasource } from '@repo/source/sync'
+import {
+  createSearchItem,
+  inactiveSearchSlot,
+  parseSearchManifest,
+  SEARCH_INSTANCES,
+  sectionItemKey,
+  type SearchItemInput,
+  type SearchManifest,
+} from '@repo/source/search'
+import { datasources } from '../datasource/index.ts'
+import type { SyncEnv, SyncParams } from './types.ts'
+import { createDB } from '@repo/source'
+
+const searchStepOptions: WorkflowStepConfig = {
+  retries: { limit: 3, delay: '10 seconds', backoff: 'exponential' },
+  timeout: '30 minutes',
+}
+
+const SEARCH_PAGE_SIZE = 100
+const SEARCH_UPLOAD_BATCH_SIZE = 10
+const SEARCH_DELETE_BATCH_SIZE = 50
+
+function manifestKey(slot: 'a' | 'b'): string {
+  return `search/manifests/v2/${slot}.json`
+}
+
+async function readManifest(env: SyncEnv, slot: 'a' | 'b'): Promise<SearchManifest | null> {
+  const object = await env.SEARCH_MANIFESTS.get(manifestKey(slot))
+  if (!object) return null
+  return parseSearchManifest(await object.json<unknown>())
+}
+
+async function indexSearchSlot({ env, repo, runId, slot }: {
+  env: SyncEnv
+  repo: SourceWriteRepo
+  runId: number
+  slot: 'a' | 'b'
+}): Promise<void> {
+  const storedManifest = await readManifest(env, slot)
+  const previous = storedManifest ?? { syncRunId: 0, items: {} }
+  const instance = env.AI_SEARCH.get(SEARCH_INSTANCES[slot])
+  const nextItems: Record<string, string> = {}
+  let afterId = 0
+  for (;;) {
+    const sections = await repo.listSearchSections(runId, afterId, SEARCH_PAGE_SIZE)
+    if (sections.length === 0) break
+
+    const additions: SearchItemInput[] = []
+    for (const section of sections) {
+      const key = sectionItemKey(section)
+      const itemId = previous.items[key]
+      if (itemId) nextItems[key] = itemId
+      else additions.push(section)
+    }
+
+    for (let start = 0; start < additions.length; start += SEARCH_UPLOAD_BATCH_SIZE) {
+      const batch = additions.slice(start, start + SEARCH_UPLOAD_BATCH_SIZE)
+      const uploaded = await Promise.all(batch.map(async (section) => {
+        const input = createSearchItem(section)
+        const item = await instance.items.uploadAndPoll(input.key, input.content, {
+          metadata: input.metadata,
+          pollIntervalMs: 1_000,
+          timeoutMs: 300_000,
+        })
+        if (item.status !== 'completed') {
+          throw new Error(`AI Search item ${item.key} did not complete indexing.`)
+        }
+        return { key: item.key, id: item.id }
+      }))
+      for (const item of uploaded) nextItems[item.key] = item.id
+    }
+
+    afterId = sections[sections.length - 1]?.id ?? afterId
+    if (sections.length < SEARCH_PAGE_SIZE) break
+  }
+
+  const removals = storedManifest
+    ? Object.entries(previous.items).filter(([key]) => nextItems[key] === undefined)
+    : []
+  for (let start = 0; start < removals.length; start += SEARCH_DELETE_BATCH_SIZE) {
+    const batch = removals.slice(start, start + SEARCH_DELETE_BATCH_SIZE)
+    await Promise.all(batch.map(async ([key, itemId]) => {
+      const { result } = await instance.items.list({ item_id: itemId, source: 'builtin', per_page: 1 })
+      if (result.some((item) => item.id === itemId && item.key === key)) {
+        await instance.items.delete(itemId)
+      }
+    }))
+  }
+
+  if (!storedManifest) {
+    const stale: { id: string; key: string }[] = []
+    for (let page = 1; ; page++) {
+      const { result } = await instance.items.list({ page, per_page: 50, source: 'builtin' })
+      stale.push(...result.filter((item) => nextItems[item.key] === undefined).map(({ id, key }) => ({ id, key })))
+      if (result.length < 50) break
+    }
+    for (let start = 0; start < stale.length; start += SEARCH_DELETE_BATCH_SIZE) {
+      await Promise.all(stale.slice(start, start + SEARCH_DELETE_BATCH_SIZE).map(({ id }) => instance.items.delete(id)))
+    }
+  }
+
+  const next: SearchManifest = { syncRunId: runId, items: nextItems }
+  await env.SEARCH_MANIFESTS.put(
+    manifestKey(slot),
+    JSON.stringify(next),
+    { httpMetadata: { contentType: 'application/json' } },
+  )
+}
+
 async function stopOnSyncError<T>(operation: () => Promise<T>): Promise<T> {
   try {
-    return await operation();
+    return await operation()
   } catch (error) {
-    if (error instanceof SourceSyncError) throw new NonRetryableError(error.message);
-    throw error;
+    if (error instanceof SourceSyncError) throw new NonRetryableError(error.message)
+    throw error
   }
 }
 
 export class SourceSyncWorkflow extends WorkflowEntrypoint<SyncEnv, SyncParams> {
   async run(event: WorkflowEvent<SyncParams>, step: WorkflowStep) {
-    const runId = event.payload.runId;
-    const repo = new SourceWriteRepo(drizzle(this.env.DB, { relations }));
+    const runId = event.payload.runId
+    const db = createDB(this.env.DB)
+    const repo = new SourceWriteRepo(db)
+
     try {
-      await step.do('start-run', () => stopOnSyncError(async () => {
-        const run = await repo.getRun(runId);
-        const slugs = datasources.map((source) => getDatasourceSlug(source.mountedPath));
+      const state = await step.do('start-run', () => stopOnSyncError(async () => {
+        const run = await repo.getRun(runId)
+        const slugs = datasources.map((source) => getDatasourceSlug(source.mountedPath))
         if (!run || JSON.stringify(run.datasourceIds) !== JSON.stringify(slugs)) {
-          throw new SourceSyncError('The configured datasource set changed after the run was queued.');
+          throw new SourceSyncError('The configured datasource set changed after the run was queued.')
         }
-        await repo.startRun(runId);
-      }));
-      const results = [];
+        if (run.status === 'succeeded') return 'succeeded'
+        if (run.status === 'queued') await repo.startRun(runId)
+        else if (run.status !== 'running') throw new SourceSyncError(`Sync run ${runId} cannot be started.`)
+        return 'running'
+      }))
+      if (state === 'succeeded') return { runId, status: state }
+
+      const results = []
       for (const [sortOrder, source] of datasources.entries()) {
         const result = await step.do(`sync-${source.id}`, {
           retries: { limit: 3, delay: '10 seconds', backoff: 'exponential' },
           timeout: '30 minutes',
         }, () => stopOnSyncError(async () => {
-          const built = await new SourceBuilder(source).build();
-          return syncDatasource(repo, runId, built, { sortOrder });
-        }));
-        results.push(result);
+          const built = await new SourceBuilder(source).build()
+          return syncDatasource(repo, runId, built, { sortOrder })
+        }))
+        results.push(result)
       }
 
-      for (let batch = 0; ; batch++) {
-        const result = await step.do(`backfill-sections-${batch}`, {
-          retries: { limit: 3, delay: '10 seconds', backoff: 'exponential' },
-          timeout: '5 minutes',
-        }, () => backfillPageSections(repo));
-        if (result.revisions === 0) break;
-      }
-
-      await step.do('publish-run', () => stopOnSyncError(() => repo.publishRun(runId)));
-      return { runId, status: 'succeeded', pages: results.reduce((count, result) => count + result.pages, 0) };
+      const head = await step.do('capture-search-head', () => repo.getHead())
+      const slot = inactiveSearchSlot(head?.searchSlot ?? null)
+      await step.do('index-search-slot', searchStepOptions, () => indexSearchSlot({
+        env: this.env, repo, runId, slot,
+      }))
+      await step.do('publish-run', () => stopOnSyncError(() => repo.publishRun(runId, slot)))
+      return { runId, status: 'succeeded', pages: results.reduce((count, result) => count + result.pages, 0) }
     } catch (error) {
-      const status = await step.do('fail-run', async () => {
-        const run = await repo.getRun(runId);
-        // Publication can commit before the step result is acknowledged.
-        if (run?.status === 'succeeded') return 'succeeded';
-        await repo.failRun(runId, error);
-        return 'failed';
-      });
-      if (status === 'succeeded') return { runId, status };
-      throw error;
+      await step.do('fail-run', async () => {
+        if (!await repo.isPublishedRun(runId)) await repo.failRun(runId, error)
+      })
+      throw error
     }
   }
 }

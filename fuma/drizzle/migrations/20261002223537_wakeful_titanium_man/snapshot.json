@@ -1,10 +1,10 @@
 {
+  "version": "7",
   "dialect": "sqlite",
-  "id": "bbb4fb66-c10e-4a9e-a2b9-d63f69a23205",
+  "id": "df62f016-b8ea-452b-a33b-d89fcaa85249",
   "prevIds": [
     "cc03dfe1-a188-44c1-877c-922f05434bd8"
   ],
-  "version": "7",
   "ddl": [
     {
       "name": "page_bodies",
@@ -16,6 +16,10 @@
     },
     {
       "name": "page_versions",
+      "entityType": "tables"
+    },
+    {
+      "name": "page_sections",
       "entityType": "tables"
     },
     {
@@ -51,7 +55,7 @@
       "table": "page_bodies"
     },
     {
-      "type": "text",
+      "type": "integer",
       "notNull": true,
       "autoincrement": false,
       "default": null,
@@ -61,7 +65,7 @@
       "table": "page_ref"
     },
     {
-      "type": "text",
+      "type": "integer",
       "notNull": true,
       "autoincrement": false,
       "default": null,
@@ -228,6 +232,66 @@
       "generated": null,
       "name": "id",
       "entityType": "columns",
+      "table": "page_sections"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision_id",
+      "entityType": "columns",
+      "table": "page_sections"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "heading_id",
+      "entityType": "columns",
+      "table": "page_sections"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "heading_title",
+      "entityType": "columns",
+      "table": "page_sections"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "content",
+      "entityType": "columns",
+      "table": "page_sections"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "ordinal",
+      "entityType": "columns",
+      "table": "page_sections"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
       "table": "datasources"
     },
     {
@@ -301,7 +365,7 @@
       "table": "datasources"
     },
     {
-      "type": "text",
+      "type": "integer",
       "notNull": false,
       "autoincrement": false,
       "default": null,
@@ -321,12 +385,22 @@
       "table": "source_heads"
     },
     {
-      "type": "text",
+      "type": "integer",
       "notNull": true,
       "autoincrement": false,
       "default": null,
       "generated": null,
       "name": "sync_run_id",
+      "entityType": "columns",
+      "table": "source_heads"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'a'",
+      "generated": null,
+      "name": "search_slot",
       "entityType": "columns",
       "table": "source_heads"
     },
@@ -351,7 +425,7 @@
       "table": "sync_runs"
     },
     {
-      "type": "text",
+      "type": "integer",
       "notNull": false,
       "autoincrement": false,
       "default": null,
@@ -473,6 +547,15 @@
         "id"
       ],
       "nameExplicit": false,
+      "name": "page_sections_pk",
+      "table": "page_sections",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
       "name": "datasources_pk",
       "table": "datasources",
       "entityType": "pks"
@@ -556,6 +639,38 @@
     {
       "columns": [
         {
+          "value": "revision_id",
+          "isExpression": false
+        },
+        {
+          "value": "ordinal",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "page_sections_revision_order",
+      "entityType": "indexes",
+      "table": "page_sections"
+    },
+    {
+      "columns": [
+        {
+          "value": "revision_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "page_sections_revision",
+      "entityType": "indexes",
+      "table": "page_sections"
+    },
+    {
+      "columns": [
+        {
           "value": "slug",
           "isExpression": false
         }
@@ -584,199 +699,6 @@
       "name": "sync_runs_status_created",
       "entityType": "indexes",
       "table": "sync_runs"
-    },
-    {
-      "name": "page_sections",
-      "entityType": "tables"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "page_revision_id",
-      "entityType": "columns",
-      "table": "page_sections"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "section_id",
-      "entityType": "columns",
-      "table": "page_sections"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "section_hash",
-      "entityType": "columns",
-      "table": "page_sections"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "body_hash",
-      "entityType": "columns",
-      "table": "page_sections"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "title",
-      "entityType": "columns",
-      "table": "page_sections"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "heading_path",
-      "entityType": "columns",
-      "table": "page_sections"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "anchor",
-      "entityType": "columns",
-      "table": "page_sections"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "level",
-      "entityType": "columns",
-      "table": "page_sections"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "ordinal",
-      "entityType": "columns",
-      "table": "page_sections"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "start_offset",
-      "entityType": "columns",
-      "table": "page_sections"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "end_offset",
-      "entityType": "columns",
-      "table": "page_sections"
-    },
-    {
-      "columns": [
-        "page_revision_id"
-      ],
-      "tableTo": "page_versions",
-      "columnsTo": [
-        "revision_id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_page_sections_page_revision_id_page_versions_revision_id_fk",
-      "entityType": "fks",
-      "table": "page_sections"
-    },
-    {
-      "columns": [
-        {
-          "value": "page_revision_id",
-          "isExpression": false
-        },
-        {
-          "value": "section_id",
-          "isExpression": false
-        }
-      ],
-      "isUnique": true,
-      "where": null,
-      "origin": "manual",
-      "name": "page_sections_identity",
-      "entityType": "indexes",
-      "table": "page_sections"
-    },
-    {
-      "columns": [
-        {
-          "value": "page_revision_id",
-          "isExpression": false
-        },
-        {
-          "value": "ordinal",
-          "isExpression": false
-        }
-      ],
-      "isUnique": true,
-      "where": null,
-      "origin": "manual",
-      "name": "page_sections_order",
-      "entityType": "indexes",
-      "table": "page_sections"
-    },
-    {
-      "columns": [
-        {
-          "value": "page_revision_id",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "page_sections_page",
-      "entityType": "indexes",
-      "table": "page_sections"
-    },
-    {
-      "columns": [
-        {
-          "value": "section_id",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "page_sections_section",
-      "entityType": "indexes",
-      "table": "page_sections"
     }
   ],
   "renames": []

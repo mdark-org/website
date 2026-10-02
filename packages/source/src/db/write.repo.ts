@@ -1,8 +1,8 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 import type { BatchItem } from 'drizzle-orm/batch'
-import type { DrizzleD1Database } from 'drizzle-orm/d1'
-import { pageContent, pageRef, pageRevision, pageSection, type PageSections } from './schema/content.ts'
-import { datasource, sourceHeads, syncRun } from './schema/sync.ts'
+import { pageContent, pageRef, pageRevision, pageSection, type PageSections } from './schema/content'
+import { datasource, sourceHeads, syncRun, type SearchSlotId } from './schema/sync'
+import type { DB } from './schema'
 
 export const SOURCE_HEAD_ID = 'current'
 const MAX_PARAMETERS = 90
@@ -15,7 +15,7 @@ export type SyncRun = typeof syncRun.$inferSelect
 export type DatasourceSnapshot = Omit<typeof datasource.$inferInsert, 'id' | 'syncRunId'> & {
   bodies: (typeof pageContent.$inferInsert)[]
   revisions: (typeof pageRevision.$inferInsert)[]
-  sections: PageSections[]
+  sections: { revisionId: string; items: PageSections }[]
   refs: Pick<typeof pageRef.$inferInsert, 'revisionId' | 'url' | 'publishedAt'>[]
 }
 
@@ -24,11 +24,10 @@ function chunks<T>(items: T[], columns: number): T[][] {
   return Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, (i + 1) * size))
 }
 
-/** Only this repository writes content. D1 batches provide the transaction boundary. */
 export class SourceWriteRepo {
-  private readonly db: DrizzleD1Database
+  private readonly db: DB
 
-  constructor(db: DrizzleD1Database) {
+  constructor(db: DB) {
     this.db = db
   }
 
@@ -50,6 +49,20 @@ export class SourceWriteRepo {
     return await this.db.select().from(syncRun).where(eq(syncRun.id, runId)).get() ?? null
   }
 
+  async getHead() {
+    return await this.db.select().from(sourceHeads).where(eq(sourceHeads.id, SOURCE_HEAD_ID)).get() ?? null
+  }
+
+  async isPublishedRun(runId: number, slot?: SearchSlotId): Promise<boolean> {
+    const row = await this.db.select({ id: sourceHeads.id }).from(sourceHeads)
+      .where(and(
+        eq(sourceHeads.id, SOURCE_HEAD_ID),
+        eq(sourceHeads.syncRunId, runId),
+        slot === undefined ? undefined : eq(sourceHeads.searchSlot, slot),
+      )).get()
+    return row !== undefined
+  }
+
   async startRun(runId: number): Promise<void> {
     await this.db.update(syncRun).set({ status: 'running', startedAt: Date.now() })
       .where(and(eq(syncRun.id, runId), eq(syncRun.status, 'queued')))
@@ -65,35 +78,30 @@ export class SourceWriteRepo {
   async getSectionRevisionIds(revisionIds: string[]): Promise<Set<string>> {
     const completed = new Set<string>()
     for (const group of chunks(revisionIds, 1)) {
-      const rows = await this.db.select({ id: pageSection.pageRevisionId }).from(pageSection)
-        .where(and(inArray(pageSection.pageRevisionId, group), sql`${pageSection.ordinal} = 0`))
+      const rows = await this.db.select({ id: pageSection.revisionId }).from(pageSection)
+        .where(inArray(pageSection.revisionId, group))
       rows.forEach((row) => completed.add(row.id))
     }
     return completed
   }
 
-  async listRevisionsWithoutSections(limit: number) {
-    return this.db.select({
-      pageRevisionId: pageRevision.revisionId,
-      sourceKey: pageRevision.sourceKey,
-      markdown: pageContent.markdown,
-    }).from(pageRevision)
-      .innerJoin(pageContent, eq(pageContent.hash, pageRevision.contentHash))
-      .leftJoin(pageSection, and(eq(pageSection.pageRevisionId, pageRevision.revisionId), sql`${pageSection.ordinal} = 0`))
-      .where(isNull(pageSection.pageRevisionId))
-      .orderBy(pageRevision.revisionId).limit(limit)
-  }
-
-  private sectionStatements(sections: PageSections): [BatchItem<'sqlite'>, ...BatchItem<'sqlite'>[]] {
-    const statements: [BatchItem<'sqlite'>, ...BatchItem<'sqlite'>[]] = [
-      this.db.delete(pageSection).where(eq(pageSection.pageRevisionId, sections[0].pageRevisionId)),
-    ]
-    for (const group of chunks(sections, 11)) statements.push(this.db.insert(pageSection).values(group))
-    return statements
-  }
-
-  async writePageSections(sections: PageSections): Promise<void> {
-    await this.db.batch(this.sectionStatements(sections))
+  private sectionStatements(revisionId: string, sections: PageSections): BatchItem<'sqlite'>[] {
+    if (sections.length === 0) return []
+    const values = JSON.stringify(sections.map(({ headingId, headingTitle, content, ordinal }) => ({
+      revisionId, headingId, headingTitle, content, ordinal,
+    })))
+    return [this.db.run(sql`
+      INSERT INTO page_sections (revision_id, heading_id, heading_title, content, ordinal)
+      SELECT
+        json_extract(value, '$.revisionId'),
+        json_extract(value, '$.headingId'),
+        json_extract(value, '$.headingTitle'),
+        json_extract(value, '$.content'),
+        json_extract(value, '$.ordinal')
+      FROM json_each(${values})
+      WHERE 1
+      ON CONFLICT (revision_id, ordinal) DO NOTHING
+    `)]
   }
 
   async writeDatasource(runId: number, snapshot: DatasourceSnapshot): Promise<{ datasourceId: number; pages: number }> {
@@ -107,16 +115,15 @@ export class SourceWriteRepo {
     for (const group of chunks(bodies, 2)) {
       await this.db.insert(pageContent).values(group).onConflictDoNothing()
     }
-    const sectionsByRevision = new Map(sections.map((items) => [items[0].pageRevisionId, items]))
+    const sectionsByRevision = new Map(sections.map(({ revisionId, items }) => [revisionId, items]))
     for (const group of chunks(revisions, 13)) {
       const statements: [BatchItem<'sqlite'>, ...BatchItem<'sqlite'>[]] = [
         this.db.insert(pageRevision).values(group).onConflictDoNothing(),
       ]
       for (const revision of group) {
         const items = sectionsByRevision.get(revision.revisionId)
-        if (items) statements.push(...this.sectionStatements(items))
+        if (items) statements.push(...this.sectionStatements(revision.revisionId, items))
       }
-      // The root row marks a complete section set. Never commit it without the other sections.
       await this.db.batch(statements)
     }
 
@@ -131,7 +138,7 @@ export class SourceWriteRepo {
     for (const group of chunks(refs, 6)) {
       statements.push(this.db.insert(pageRef).values(group.map((ref) => ({ ...ref, syncRunId: runId, datasourceId }))))
     }
-    // The datasource row is a completion marker. Replace it and all its refs atomically on retry.
+    // Replace the datasource snapshot in this run and its page references.
     await this.db.batch(statements)
     const saved = await this.db.select({ id: datasource.id }).from(datasource)
       .where(and(eq(datasource.syncRunId, runId), eq(datasource.slug, info.slug))).get()
@@ -139,10 +146,46 @@ export class SourceWriteRepo {
     return { datasourceId: saved.id, pages: refs.length }
   }
 
-  async publishRun(runId: number): Promise<void> {
-    const existing = await this.getRun(runId)
-    if (existing?.status === 'succeeded') return
+  async listSearchSections(runId: number, afterId: number, limit: number) {
+    return this.db.select({
+      id: pageSection.id,
+      revisionId: pageSection.revisionId,
+      headingId: pageSection.headingId,
+      headingTitle: pageSection.headingTitle,
+      content: pageSection.content,
+      ordinal: pageSection.ordinal,
+      pageTitle: pageRevision.title,
+      url: pageRef.url,
+      tag: datasource.slug,
+    }).from(pageRef)
+      .innerJoin(pageRevision, eq(pageRevision.revisionId, pageRef.revisionId))
+      .innerJoin(pageSection, eq(pageSection.revisionId, pageRevision.revisionId))
+      .innerJoin(datasource, and(eq(datasource.id, pageRef.datasourceId), eq(datasource.syncRunId, pageRef.syncRunId)))
+      .where(and(eq(pageRef.syncRunId, runId), afterId === 0 ? undefined : sql`${pageSection.id} > ${afterId}`))
+      .orderBy(pageSection.id)
+      .limit(limit)
+  }
+
+  async publishRun(runId: number, slot: SearchSlotId): Promise<void> {
+    const currentRun = await this.getRun(runId)
+    const currentHead = await this.getHead()
+    if (await this.isPublishedRun(runId, slot)) {
+      if (currentRun?.status === 'running') {
+        await this.db.update(syncRun).set({ status: 'succeeded', finishedAt: Date.now(), error: null })
+          .where(and(eq(syncRun.id, runId), eq(syncRun.status, 'running')))
+      }
+      if ((await this.getRun(runId))?.status === 'succeeded') return
+    }
+    if (currentRun?.status === 'succeeded') {
+      throw new SourceSyncError(`Sync run ${runId} has already completed.`)
+    }
     const run = await this.requireRunning(runId)
+    const baseIsCurrent = run.baseRunId === null
+      ? currentHead === null
+      : await this.db.select({ id: sourceHeads.id }).from(sourceHeads)
+        .where(and(eq(sourceHeads.id, SOURCE_HEAD_ID), eq(sourceHeads.syncRunId, run.baseRunId))).get() !== undefined
+    if (!baseIsCurrent) throw new SourceSyncError('The published head changed during synchronization.')
+
     const snapshots = await this.db.select({ slug: datasource.slug }).from(datasource)
       .where(eq(datasource.syncRunId, runId))
     const slugs = new Set(snapshots.map((snapshot) => snapshot.slug))
@@ -153,35 +196,33 @@ export class SourceWriteRepo {
     const duplicate = await this.db.select({ url: pageRef.url }).from(pageRef)
       .where(eq(pageRef.syncRunId, runId)).groupBy(pageRef.url).having(sql`count(*) > 1`).get()
     if (duplicate) throw new SourceSyncError(`Duplicate page URL: ${duplicate.url}`)
-    const incomplete = await this.db.select({ url: pageRef.url }).from(pageRef)
-      .leftJoin(pageSection, and(eq(pageSection.pageRevisionId, pageRef.revisionId), sql`${pageSection.ordinal} = 0`))
-      .where(and(eq(pageRef.syncRunId, runId), isNull(pageSection.pageRevisionId))).get()
-    if (incomplete) throw new SourceSyncError(`Missing page sections: ${incomplete.url}`)
 
     const now = Date.now()
-    await this.db.batch([
-      this.db.insert(sourceHeads).select(this.db.select({
-        id: sql<string>`${SOURCE_HEAD_ID}`.as('id'),
-        syncRunId: sql<number>`${runId}`.as('sync_run_id'),
-        publishedAt: sql<number>`${now}`.as('published_at'),
-      }).from(syncRun).where(and(eq(syncRun.id, runId), eq(syncRun.status, 'running'))))
-        .onConflictDoUpdate({
-          target: sourceHeads.id,
-          set: { syncRunId: runId, publishedAt: now },
-          setWhere: run.baseRunId === null ? sql`0` : eq(sourceHeads.syncRunId, run.baseRunId),
-        }),
-      this.db.update(syncRun).set({ status: 'succeeded', finishedAt: now, error: null })
-        .where(and(eq(syncRun.id, runId), eq(syncRun.status, 'running'),
-          sql`exists (select 1 from ${sourceHeads} where ${sourceHeads.id} = ${SOURCE_HEAD_ID} and ${sourceHeads.syncRunId} = ${runId})`)),
-    ])
-    if ((await this.getRun(runId))?.status !== 'succeeded') {
+    await this.db.insert(sourceHeads).values({
+      id: SOURCE_HEAD_ID,
+      syncRunId: runId,
+      searchSlot: slot,
+      publishedAt: now,
+    })
+      .onConflictDoUpdate({
+        target: sourceHeads.id,
+        set: { syncRunId: runId, searchSlot: slot, publishedAt: now },
+        setWhere: run.baseRunId === null ? sql`0` : eq(sourceHeads.syncRunId, run.baseRunId),
+      })
+
+    if (!await this.isPublishedRun(runId, slot)) {
       throw new SourceSyncError('The published head changed during synchronization.')
+    }
+    await this.db.update(syncRun).set({ status: 'succeeded', finishedAt: now, error: null })
+      .where(and(eq(syncRun.id, runId), eq(syncRun.status, 'running')))
+    if ((await this.getRun(runId))?.status !== 'succeeded') {
+      throw new SourceSyncError('Could not complete the published sync run.')
     }
   }
 
   async failRun(runId: number, error: unknown): Promise<void> {
     const message = error instanceof Error ? error.message : String(error)
     await this.db.update(syncRun).set({ status: 'failed', finishedAt: Date.now(), error: message })
-      .where(and(eq(syncRun.id, runId), inArray(syncRun.status, ['queued', 'running', 'ready'])))
+      .where(and(eq(syncRun.id, runId), inArray(syncRun.status, ['queued', 'running'])))
   }
 }
