@@ -13,6 +13,7 @@ export default defineConfig({
   optimizeDeps: {
     include: [
     ],
+    exclude: ["fumadocs-ui", "fumadocs-core"],
   },
   plugins: [
     tailwindcss(),
