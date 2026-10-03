@@ -1,5 +1,5 @@
 /// <reference types="@cloudflare/workers-types" />
-
+import pLimit from 'p-limit';
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep, type WorkflowStepConfig } from 'cloudflare:workers'
 import { NonRetryableError } from 'cloudflare:workflows'
 import { SourceBuilder } from '@repo/datasource/build'
@@ -47,6 +47,7 @@ async function indexSearchSlot({ env, repo, runId, slot }: {
   const instance = env.AI_SEARCH.get(SEARCH_INSTANCES[slot])
   const nextItems: Record<string, string> = {}
   let afterId = 0
+  const limiter = pLimit(4);
   for (;;) {
     const sections = await repo.listSearchSections(runId, afterId, SEARCH_PAGE_SIZE)
 
@@ -60,19 +61,15 @@ async function indexSearchSlot({ env, repo, runId, slot }: {
       if (itemId) nextItems[key] = itemId
       else additions.push(section)
     }
-
-    for (let start = 0; start < additions.length; start += SEARCH_UPLOAD_BATCH_SIZE) {
-      const batch = additions.slice(start, start + SEARCH_UPLOAD_BATCH_SIZE)
-      const uploaded = await Promise.all(batch.map(async (section) => {
-        const input = createSearchItem(section)
-        const item = await instance.items.upload(input.key, input.content, {
-          metadata: input.metadata,
-        })
-        return { key: item.key, id: item.id }
-      }))
-      for (const item of uploaded) nextItems[item.key] = item.id
+    const handleItem = async function (section: SearchItemInput) {
+      const input = createSearchItem(section)
+      const item = await instance.items.upload(input.key, input.content, {
+        metadata: input.metadata,
+      })
+      nextItems[item.key] = item.id
     }
-
+    const batch = additions.map((it) => limiter(() => handleItem(it)))
+    await Promise.all(batch)
     afterId = sections[sections.length - 1]?.id ?? afterId
     if (sections.length < SEARCH_PAGE_SIZE) break
   }

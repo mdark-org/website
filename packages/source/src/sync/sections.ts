@@ -11,13 +11,35 @@ export async function parsePageSections(input: {
 }): Promise<PageSections> {
   const { revisionId, markdown } = input
   const data = structure(markdown)
-  const headingTitles = new Map(data.headings.map(({ id, content }) => [id, content]))
+  const contentsByHeading = new Map<string | null, string[]>()
 
-  return data.contents.map((item, ordinal): NewPageSection => ({
-    revisionId,
-    headingId: item.heading ?? null,
-    headingTitle: item.heading ? headingTitles.get(item.heading) ?? null : null,
-    content: item.content,
-    ordinal,
-  }))
+  for (const item of data.contents) {
+    const headingId = item.heading ?? null
+    const contents = contentsByHeading.get(headingId)
+    if (contents) contents.push(item.content)
+    else contentsByHeading.set(headingId, [item.content])
+  }
+
+  const sections: PageSections = []
+  const appendSection = (headingId: string | null, headingTitle: string | null) => {
+    const contents = contentsByHeading.get(headingId)
+    if (!contents) return
+
+    const content = contents.map((item) => item.trim()).filter(Boolean).join('\n\n')
+    if (!content) return
+
+    const section: NewPageSection = {
+      revisionId,
+      headingId,
+      headingTitle,
+      content,
+      ordinal: sections.length,
+    }
+    sections.push(section)
+  }
+  appendSection(null, null)
+  data.headings.forEach(heading => appendSection(heading.id, heading.content))
+
+
+  return sections
 }

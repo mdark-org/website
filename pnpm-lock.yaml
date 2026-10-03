@@ -311,6 +311,9 @@ importers:
       next:
         specifier: 16.2.6
         version: 16.2.6(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      p-limit:
+        specifier: ^7.3.3
+        version: 7.3.3
       postgres:
         specifier: ^3.4.7
         version: 3.4.9
@@ -399,9 +402,6 @@ importers:
       drizzle-kit:
         specifier: catalog:drizzle
         version: 1.0.0-rc.5-ab785fc
-      p-limit:
-        specifier: ^7.2.0
-        version: 7.3.3
       postcss:
         specifier: 8.5.15
         version: 8.5.15
