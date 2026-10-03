@@ -27,7 +27,7 @@ export const syncWorker = defineWorker({
   },
   env: {
     DB: bindings.d1({ name: "mdark-dev-source", id: databaseId }),
-    AI_SEARCH: bindings.aiSearchNamespace({ namespace: aiSearchNamespace }),
+    AI_SEARCH: bindings.aiSearchNamespace({ namespace: aiSearchNamespace, dev: { remote: true } }),
     SEARCH_MANIFESTS: bindings.r2({ name: 'fuma-search-manifests' }),
     SYNC_WORKFLOW: bindings.workflow({
       name: "fuma-source-sync",

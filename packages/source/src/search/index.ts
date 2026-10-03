@@ -8,8 +8,8 @@ export { SearchReadRepo }
 export type { PublishedSearch, SearchSectionResult }
 
 export const SEARCH_INSTANCES = {
-  a: 'fumadocs-v2-a',
-  b: 'fumadocs-v2-b',
+  a: 'mdark-a',
+  b: 'mdark-b',
 } satisfies Record<SearchSlotId, string>
 
 export interface SearchManifest {
@@ -24,7 +24,7 @@ export interface SearchItemInput extends SearchSectionResult {
 export interface SearchItem {
   key: string
   content: string
-  metadata: { pageSectionId: number; tag: string }
+  metadata: { pagesectionid: string; locale: string, tag: string }
 }
 
 export interface SearchChunk {
@@ -48,7 +48,7 @@ export function createSearchItem(section: SearchItemInput): SearchItem {
   return {
     key: sectionItemKey(section),
     content: `# ${section.pageTitle}${heading}\n\n${content}`,
-    metadata: { pageSectionId: section.id, tag: section.tag },
+    metadata: { pagesectionid: String(section.id), locale: 'zh-cn', tag: section.tag },
   }
 }
 

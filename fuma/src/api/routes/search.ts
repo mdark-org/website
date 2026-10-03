@@ -1,5 +1,6 @@
 import {Hono} from "hono";
-import {SearchReadRepo} from "@repo/source/search";
+import {search, SearchReadRepo} from "@repo/source/search";
+import {env} from "cloudflare:workers";
 
 export const searchRoute = new Hono()
 searchRoute.get('/search', async (c) => {
@@ -13,9 +14,9 @@ searchRoute.get('/search', async (c) => {
   const query = (c.req.query('q') ?? '').trim()
   if (Array.from(query).length > 256) return c.json({ error: 'invalid_query' }, 400)
   if (Array.from(query).length < 2) return c.json([])
-  // const repo = new SearchReadRepo(c.get('db'))
-
-  // const instance = env.AI_SEARCH.get('mdark')
-  // return c.json(search(repo,instance, {syncRunId: 1, query, tag}))
-  return c.json([])
+  const repo = new SearchReadRepo(c.get('db'))
+  const slot = await repo.getPublishedSearch()
+  if(!slot) return c.json([])
+  const instance = env.AI_SEARCH.get('mdark')
+  return c.json(search(repo, instance, { syncRunId: slot.syncRunId, query, tag }))
 })

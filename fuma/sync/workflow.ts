@@ -49,6 +49,8 @@ async function indexSearchSlot({ env, repo, runId, slot }: {
   let afterId = 0
   for (;;) {
     const sections = await repo.listSearchSections(runId, afterId, SEARCH_PAGE_SIZE)
+
+    console.log(`upload section to search engine ${sections.length}`)
     if (sections.length === 0) break
 
     const additions: SearchItemInput[] = []
@@ -63,14 +65,9 @@ async function indexSearchSlot({ env, repo, runId, slot }: {
       const batch = additions.slice(start, start + SEARCH_UPLOAD_BATCH_SIZE)
       const uploaded = await Promise.all(batch.map(async (section) => {
         const input = createSearchItem(section)
-        const item = await instance.items.uploadAndPoll(input.key, input.content, {
+        const item = await instance.items.upload(input.key, input.content, {
           metadata: input.metadata,
-          pollIntervalMs: 1_000,
-          timeoutMs: 300_000,
         })
-        if (item.status !== 'completed') {
-          throw new Error(`AI Search item ${item.key} did not complete indexing.`)
-        }
         return { key: item.key, id: item.id }
       }))
       for (const item of uploaded) nextItems[item.key] = item.id
@@ -155,7 +152,7 @@ export class SourceSyncWorkflow extends WorkflowEntrypoint<SyncEnv, SyncParams> 
       }
 
       const head = await step.do('capture-search-head', () => repo.getHead())
-      const slot = inactiveSearchSlot(head?.searchSlot ?? null)
+      const slot = head?.searchSlot === 'a' ? 'b' : 'a'
       await step.do('index-search-slot', searchStepOptions, () => indexSearchSlot({
         env: this.env, repo, runId, slot,
       }))
@@ -163,7 +160,7 @@ export class SourceSyncWorkflow extends WorkflowEntrypoint<SyncEnv, SyncParams> 
       return { runId, status: 'succeeded', pages: results.reduce((count, result) => count + result.pages, 0) }
     } catch (error) {
       await step.do('fail-run', async () => {
-        if (!await repo.isPublishedRun(runId)) await repo.failRun(runId, error)
+        await repo.failRun(runId, error)
       })
       throw error
     }
