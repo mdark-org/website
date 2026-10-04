@@ -13,11 +13,13 @@
   "dependencies": {
     "drizzle-orm": "catalog:drizzle",
     "fumadocs-core": "catalog:fumadocs",
+    "p-limit": "^7.3.3",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0",
-    "vfile": "^6.0.3"
+    "vfile": "^6.0.3",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/mdast": "^4.0.4",

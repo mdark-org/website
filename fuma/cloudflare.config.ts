@@ -20,6 +20,9 @@ export const syncWorker = defineWorker({
   entrypoint: "./sync/worker.ts",
   compatibilityDate: "2026-09-30",
   compatibilityFlags: ["nodejs_compat"],
+  observability: {
+    enabled:true,
+  },
   // Building + writing a datasource is CPU-heavy compared to serving a page (default 30s).
   limits: { cpuMs: 300_000, subrequests: 100_000 },
   exports: {

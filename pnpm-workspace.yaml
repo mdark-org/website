@@ -10,6 +10,7 @@ allowBuilds:
   workerd: true
 
 catalog:
+  tsdown: ^0.23.0
   vite: npm:@voidzero-dev/vite-plus-core@latest
   vite-plus: latest
   vitest: npm:@voidzero-dev/vite-plus-test@latest
@@ -36,6 +37,14 @@ catalogs:
 minimumReleaseAgeExclude:
   - tsdown@0.22.1
   - '@cloudflare/workers-types@5.20260930.2'
+  - '@typescript/typescript-darwin-arm64@7.1.0-dev.20261002.1'
+  - '@typescript/typescript-darwin-x64@7.1.0-dev.20261002.1'
+  - '@typescript/typescript-linux-arm64@7.1.0-dev.20261002.1'
+  - '@typescript/typescript-linux-arm@7.1.0-dev.20261002.1'
+  - '@typescript/typescript-linux-x64@7.1.0-dev.20261002.1'
+  - '@typescript/typescript-win32-arm64@7.1.0-dev.20261002.1'
+  - '@typescript/typescript-win32-x64@7.1.0-dev.20261002.1'
+  - typescript@7.1.0-dev.20261002.1
 patchedDependencies:
   fumadocs-core: patches/fumadocs-core.patch
   vinext: patches/vinext.patch

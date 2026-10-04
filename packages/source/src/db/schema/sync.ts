@@ -1,5 +1,5 @@
 import type { Root } from "../../types";
-import { integer, sqliteTable, text, foreignKey,index } from "drizzle-orm/sqlite-core";
+import {integer, sqliteTable, text, foreignKey, index, uniqueIndex} from "drizzle-orm/sqlite-core";
 
 
 export const syncRun = sqliteTable('sync_runs', {
@@ -29,7 +29,7 @@ export const datasource = sqliteTable('datasources', {
   tree: text('tree', { mode: 'json' }).$type<Root>().notNull(),
   syncRunId: integer('sync_run_id'),
 }, (t) => [
-  index('datasource_snapshots_datasource').on(t.slug),
+  uniqueIndex('datasource_slug_index').on(t.slug),
 ])
 
 /** One run covers the complete configured datasource set. */

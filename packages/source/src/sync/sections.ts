@@ -5,10 +5,18 @@ export const SECTION_PARSER_VERSION = 1
 
 // 将 content 转为 section[]
 
+type Section = {
+  revisionId: string;
+  content: string;
+  ordinal: number;
+  headingId?: string | null | undefined;
+  headingTitle?: string | null | undefined;
+}
+
 export async function parsePageSections(input: {
   revisionId: string
   markdown: string
-}): Promise<PageSections> {
+}): Promise<Section[]> {
   const { revisionId, markdown } = input
   const data = structure(markdown)
   const contentsByHeading = new Map<string | null, string[]>()

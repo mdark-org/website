@@ -3,6 +3,7 @@ import type { BatchItem } from 'drizzle-orm/batch'
 import { pageContent, pageRef, pageRevision, pageSection, type PageSections } from './schema/content'
 import { datasource, sourceHeads, syncRun, type SearchSlotId } from './schema/sync'
 import type { DB } from './schema'
+import { chunk } from '../utils/chunk'
 
 export const SOURCE_HEAD_ID = 'current'
 const MAX_PARAMETERS = 90
@@ -20,8 +21,7 @@ export type DatasourceSnapshot = Omit<typeof datasource.$inferInsert, 'id' | 'sy
 }
 
 function chunks<T>(items: T[], columns: number): T[][] {
-  const size = Math.floor(MAX_PARAMETERS / columns)
-  return Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, (i + 1) * size))
+  return chunk(items, Math.floor(MAX_PARAMETERS / columns))
 }
 
 export class SourceWriteRepo {
@@ -130,9 +130,10 @@ export class SourceWriteRepo {
     const previousIds = this.db.select({ id: datasource.id }).from(datasource)
       .where(and(eq(datasource.syncRunId, runId), eq(datasource.slug, info.slug)))
     const statements: [BatchItem<'sqlite'>, ...BatchItem<'sqlite'>[]] = [
-      this.db.delete(pageRef).where(and(eq(pageRef.syncRunId, runId), inArray(pageRef.datasourceId, previousIds))),
-      this.db.delete(datasource).where(and(eq(datasource.syncRunId, runId), eq(datasource.slug, info.slug))),
-      this.db.insert(datasource).values({ ...info, syncRunId: runId }),
+      this.db.insert(datasource).values({ ...info, syncRunId: runId }).onConflictDoUpdate({
+        target: datasource.slug,
+        set: { syncRunId: runId },
+      }),
     ]
     const datasourceId = sql<number>`(select ${datasource.id} from ${datasource} where ${datasource.syncRunId} = ${runId} and ${datasource.slug} = ${info.slug})`
     for (const group of chunks(refs, 6)) {
@@ -146,8 +147,15 @@ export class SourceWriteRepo {
     return { datasourceId: saved.id, pages: refs.length }
   }
 
-  async listSearchSections(runId: number, afterId: number, limit: number) {
-    return this.db.select({
+  async listSearchSectionKeys(runId: number) {
+    return this.db.select({ sectionId: pageSection.id, revisionId: pageSection.revisionId })
+      .from(pageRef)
+      .innerJoin(pageSection, eq(pageSection.revisionId, pageRef.revisionId))
+      .where(eq(pageRef.syncRunId, runId))
+  }
+
+  async getSearchSections(runId: number, sectionIds: number[]) {
+    const groups = await Promise.all(chunks(sectionIds, 1).map((ids) => this.db.select({
       id: pageSection.id,
       revisionId: pageSection.revisionId,
       headingId: pageSection.headingId,
@@ -159,11 +167,10 @@ export class SourceWriteRepo {
       tag: datasource.slug,
     }).from(pageRef)
       .innerJoin(pageRevision, eq(pageRevision.revisionId, pageRef.revisionId))
-      .innerJoin(pageSection, eq(pageSection.revisionId, pageRevision.revisionId))
+      .innerJoin(pageSection, eq(pageSection.revisionId, pageRef.revisionId))
       .innerJoin(datasource, and(eq(datasource.id, pageRef.datasourceId), eq(datasource.syncRunId, pageRef.syncRunId)))
-      .where(and(eq(pageRef.syncRunId, runId), afterId === 0 ? undefined : sql`${pageSection.id} > ${afterId}`))
-      .orderBy(pageSection.id)
-      .limit(limit)
+      .where(and(eq(pageRef.syncRunId, runId), inArray(pageSection.id, ids)))))
+    return groups.flat()
   }
 
   async publishRun(runId: number, slot: SearchSlotId): Promise<void> {
