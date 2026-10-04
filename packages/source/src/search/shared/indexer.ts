@@ -1,32 +1,35 @@
-import type {AiSearchInstance} from "@cloudflare/workers-types";
-import {chunk} from "../../utils/chunk";
-import {completedSlotManifest, parseRevisionKey } from "./plan";
-import {deleteSearchBatch, uploadSearchBatch} from "./execute";
-import type {SourceWriteRepo} from "../../db/write.repo";
+import type { AiSearchInstance } from '@cloudflare/workers-types'
+import { chunk } from '../../utils/chunk'
+import {uploadSearchBatch, deleteSearchBatch, SearchableContent} from './upload'
+import {completedSlotManifest, IndexPlanInput, prepareIndexPlan} from './plan'
 import {ManifestStore} from "./manifest";
-import {prepareIndexPlan} from "./search";
+import type {SourceWriteRepo} from "../../db/write.repo";
 
-type IndexPlanInput = {
-  repo: SourceWriteRepo
-  manifestStore: ManifestStore
-  runId: number
-  slot: 'a' | 'b'
+
+export type DocsUploader<T = any> = {
+  repo: SourceWriteRepo,
+  manifestStore: ManifestStore,
+  runId: number,
+  slot: 'a' | 'b',
+  keyGetter: (item: T) => string
+  docsLoader: (sectionKeys: string[]) => Promise<SearchableContent[]>
 }
 
-export async function indexFileSlot({ instance, repo, manifestStore, runId, slot }: IndexPlanInput & {
+export async function indexer({ instance, docsUploader }: {
+  docsUploader: DocsUploader
   instance: AiSearchInstance
 }): Promise<void> {
-  const input = { repo, manifestStore, runId, slot }
   console.log(`preparing index plan`)
-  const prepared = await prepareIndexPlan(input)
+  const manifestStore = docsUploader.manifestStore
+  const prepared = await prepareIndexPlan(docsUploader)
   console.log(`plan: add ${prepared.plan.upsert.length}, delete ${prepared.plan.delete.length}`)
   const plan = prepared.plan
   let checkpoint = prepared.checkpoint
   let total = 0
 
-  for (const revisionKeys of chunk(plan.upsert, 100)) {
-    const revisionItems = revisionKeys.map(parseRevisionKey)
-    const result = await uploadSearchBatch({ instance, repo, runId, revisionItems })
+  for (const sectionKeys of chunk(plan.upsert, 100)) {
+    const docs = await docsUploader.docsLoader(sectionKeys)
+    const result = await uploadSearchBatch({ instance, docs })
     total += result.processed.length
     console.log(`upload: ${result.processed.length}, total: ${total}, rest: ${plan.upsert.length - total}`)
     if (result.processed.length) {
@@ -47,8 +50,6 @@ export async function indexFileSlot({ instance, repo, manifestStore, runId, slot
     if (result.failure) throw result.failure.reason
   }
   // 全部完成
-  console.log(`load slot manifest`)
   const previous = await manifestStore.readSlotManifest()
-  console.log(`saving manifest`)
-  await manifestStore.saveManifest(completedSlotManifest(runId, previous, checkpoint))
+  await manifestStore.saveManifest(completedSlotManifest(docsUploader.runId, previous, checkpoint))
 }

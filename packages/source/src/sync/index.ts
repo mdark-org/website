@@ -2,6 +2,8 @@ import { type BuiltDatasource } from './snapshot'
 import { SourceSyncError, SourceWriteRepo, type DatasourceSnapshot } from '../db/write.repo'
 import { hash } from '../utils/hash'
 import { parsePageSections, SECTION_PARSER_VERSION } from './sections'
+import {Datasource} from "../types";
+import {SourceBuilder} from "../builder";
 export type { BuiltDatasource } from './snapshot.ts'
 export { SOURCE_HEAD_ID, SourceSyncError, SourceWriteRepo } from '../db/write.repo'
 export type { SyncRun } from '../db/write.repo'
@@ -13,7 +15,8 @@ export function getDatasourceSlug(mountedPath: string): string {
   return slug
 }
 
-export async function syncDatasource(repo: SourceWriteRepo, runId: number, built: BuiltDatasource, options: { sortOrder?: number } = {}) {
+export async function syncDatasource(repo: SourceWriteRepo, runId: number, datasource: Datasource, options: { sortOrder?: number } = {}) {
+  const built = await new SourceBuilder(datasource).build()
   const info = built.datasourceInfo
   const snapshot: DatasourceSnapshot = {
     slug: getDatasourceSlug(info.mountedPath),
@@ -78,7 +81,7 @@ export async function syncDatasource(repo: SourceWriteRepo, runId: number, built
     try {
       snapshot.sections.push({
         revisionId: revision.revisionId,
-        items: await parsePageSections({ revisionId: revision.revisionId, markdown }),
+        items: parsePageSections({ revisionId: revision.revisionId, markdown }),
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)

@@ -10,8 +10,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./markdown": "./src/markdown.ts",
-    "./search/section": "./src/search/section/index.ts",
-    "./search/file": "./src/search/file/index.ts",
+    "./search": "./src/search/index.ts",
     "./builder": "./src/builder/index.ts",
     "./types": "./src/types/index.ts",
     "./sync": "./src/sync/index.ts"

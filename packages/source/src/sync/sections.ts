@@ -11,10 +11,11 @@ type Section = {
   headingTitle?: string | null | undefined;
 }
 
-export async function parsePageSections(input: {
+// 将 content 按 section 拆分。
+export function parsePageSections(input: {
   revisionId: string
   markdown: string
-}): Promise<Section[]> {
+}): Section[] {
   const { revisionId, markdown } = input
   const data = structure(markdown)
   const contentsByHeading = new Map<string | null, string[]>()
@@ -45,7 +46,5 @@ export async function parsePageSections(input: {
   }
   appendSection(null, null)
   data.headings.forEach(heading => appendSection(heading.id, heading.content))
-
-
   return sections
 }

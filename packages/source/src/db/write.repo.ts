@@ -32,9 +32,6 @@ export class SourceWriteRepo {
   }
 
   async createRun(datasourceIds: string[]): Promise<SyncRun> {
-    if (new Set(datasourceIds).size !== datasourceIds.length || datasourceIds.some((id) => !id)) {
-      throw new SourceSyncError('Datasource slugs must be non-empty and unique.')
-    }
     const [run] = await this.db.insert(syncRun).values({
       baseRunId: sql`(select ${sourceHeads.syncRunId} from ${sourceHeads} where ${sourceHeads.id} = ${SOURCE_HEAD_ID})`,
       datasourceIds,
