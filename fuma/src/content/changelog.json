@@ -1,5 +1,9 @@
 [
   {
+    "time": "2026-10-05",
+    "content": "迁移至 Cloudflare Worker + vinext，并接入 Cloudflare AI Search"
+  },
+  {
     "time": "2026-03-09",
     "content": "因 Orama Cloud Free Plan 变更，暂移除搜索支持。待时间充裕考虑替代方案"
   },
