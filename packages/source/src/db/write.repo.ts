@@ -60,12 +60,6 @@ export class SourceWriteRepo {
       .where(and(eq(syncRun.id, runId), eq(syncRun.status, 'queued')))
   }
 
-  private async requireRunning(runId: number): Promise<SyncRun> {
-    const run = await this.getRun(runId)
-    // if (!run || run.status !== 'running') throw new SourceSyncError(`Sync run ${runId} is not running.`)
-    return run!
-  }
-
   async getSectionRevisionIds(revisionIds: string[]): Promise<Set<string>> {
     const completed = new Set<string>()
     for (const group of chunkD1Columns(revisionIds, 1)) {
@@ -189,7 +183,7 @@ export class SourceWriteRepo {
     if (currentRun?.status === 'succeeded') {
       throw new SourceSyncError(`Sync run ${runId} has already completed.`)
     }
-    const run = await this.requireRunning(runId)
+    const run = (await this.getRun(runId))!
     const baseIsCurrent = run.baseRunId === null
       ? currentHead === null
       : await this.db.select({ id: sourceHeads.id }).from(sourceHeads)
