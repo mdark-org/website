@@ -3,8 +3,6 @@ import {z} from "zod";
 
 export type Page = z.infer<typeof pageSchema>
 
-
-
 export type Folder = {
   url: string,
   name: string,
@@ -65,4 +63,20 @@ export interface DatasourceInfo {
   icon?: string | null
   mountedPath: string
   sortOrder: number
+}
+
+
+export interface BuiltDatasource {
+  pageTree: Root
+  pageMap: Map<string, Page>
+  datasourceInfo: {
+    id: string
+    name: string
+    mountedPath: string
+    category?: string[]
+    description: string
+    github?: { repo: string; branch: string; dir: string }
+    icon?: string
+    config?: unknown
+  }
 }

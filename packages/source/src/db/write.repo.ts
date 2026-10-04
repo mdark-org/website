@@ -3,10 +3,9 @@ import type { BatchItem } from 'drizzle-orm/batch'
 import { pageContent, pageRef, pageRevision, pageSection, type PageSections } from './schema/content'
 import { datasource, sourceHeads, syncRun, type SearchSlotId } from './schema/sync'
 import type { DB } from './schema'
-import { chunk } from '../utils/chunk'
+import { chunkD1Columns } from '../utils/chunk'
 
 export const SOURCE_HEAD_ID = 'current'
-const MAX_PARAMETERS = 90
 
 export class SourceSyncError extends Error {
   override name = 'SourceSyncError'
@@ -18,10 +17,6 @@ export type DatasourceSnapshot = Omit<typeof datasource.$inferInsert, 'id' | 'sy
   revisions: (typeof pageRevision.$inferInsert)[]
   sections: { revisionId: string; items: PageSections }[]
   refs: Pick<typeof pageRef.$inferInsert, 'revisionId' | 'url' | 'publishedAt'>[]
-}
-
-function chunks<T>(items: T[], columns: number): T[][] {
-  return chunk(items, Math.floor(MAX_PARAMETERS / columns))
 }
 
 export class SourceWriteRepo {
@@ -73,7 +68,7 @@ export class SourceWriteRepo {
 
   async getSectionRevisionIds(revisionIds: string[]): Promise<Set<string>> {
     const completed = new Set<string>()
-    for (const group of chunks(revisionIds, 1)) {
+    for (const group of chunkD1Columns(revisionIds, 1)) {
       const rows = await this.db.select({ id: pageSection.revisionId }).from(pageSection)
         .where(inArray(pageSection.revisionId, group))
       rows.forEach((row) => completed.add(row.id))
@@ -101,18 +96,12 @@ export class SourceWriteRepo {
   }
 
   async writeDatasource(runId: number, snapshot: DatasourceSnapshot): Promise<{ datasourceId: number; pages: number }> {
-    // const run = await this.requireRunning(runId)
-    // if (!run.datasourceIds.includes(snapshot.slug)) {
-    //   throw new SourceSyncError(`Datasource ${snapshot.slug} is not part of sync run ${runId}.`)
-    // }
     const { bodies, revisions, sections, refs, slug, ...info } = snapshot
-    // console.log("saving tree", info)
-    // These rows are immutable and reusable. Partial inserts are not visible without a published ref.
-    for (const group of chunks(bodies, 2)) {
+    for (const group of chunkD1Columns(bodies, 2)) {
       await this.db.insert(pageContent).values(group).onConflictDoNothing()
     }
     const sectionsByRevision = new Map(sections.map(({ revisionId, items }) => [revisionId, items]))
-    for (const group of chunks(revisions, 13)) {
+    for (const group of chunkD1Columns(revisions, 13)) {
       const statements: [BatchItem<'sqlite'>, ...BatchItem<'sqlite'>[]] = [
         this.db.insert(pageRevision).values(group).onConflictDoNothing(),
       ]
@@ -129,7 +118,7 @@ export class SourceWriteRepo {
       }),
     ]
     const datasourceId = sql<number>`(select ${datasource.id} from ${datasource} where ${datasource.syncRunId} = ${runId} and ${datasource.slug} = ${slug})`
-    for (const group of chunks(refs, 6)) {
+    for (const group of chunkD1Columns(refs, 6)) {
       statements.push(this.db.insert(pageRef).values(group.map((ref) => ({ ...ref, syncRunId: runId, datasourceId }))))
     }
     // Replace the datasource snapshot in this run and its page references.
@@ -146,6 +135,7 @@ export class SourceWriteRepo {
       .innerJoin(pageSection, eq(pageSection.revisionId, pageRef.revisionId))
       .where(eq(pageRef.syncRunId, runId))
   }
+
   async listSearchFiles(runId: number) {
     return this.db.select({ revisionId: pageRef.revisionId })
       .from(pageRef)
@@ -153,7 +143,7 @@ export class SourceWriteRepo {
   }
 
   async getSearchFiles(runId: number, fileHashes: string[]) {
-    const groups = await Promise.all(chunks(fileHashes, 1).map((ids) => this.db.select({
+    return this.db.select({
       revisionId: pageRevision.revisionId,
       headingId: pageRevision.title,
       headingTitle: pageRevision.title,
@@ -162,15 +152,14 @@ export class SourceWriteRepo {
       url: pageRef.url,
       tag: datasource.slug,
     }).from(pageRef)
-      .innerJoin(pageRevision, eq(pageRevision.revisionId, pageRef.revisionId))
-      .innerJoin(pageContent, eq(pageContent.hash, pageRevision.contentHash))
-      .innerJoin(datasource, and(eq(datasource.id, pageRef.datasourceId), eq(datasource.syncRunId, pageRef.syncRunId)))
-      .where(and(eq(pageRef.syncRunId, runId), inArray(pageRevision.revisionId, ids)))))
-    return groups.flat()
+    .innerJoin(pageRevision, eq(pageRevision.revisionId, pageRef.revisionId))
+    .innerJoin(pageContent, eq(pageContent.hash, pageRevision.contentHash))
+    .innerJoin(datasource, and(eq(datasource.id, pageRef.datasourceId), eq(datasource.syncRunId, pageRef.syncRunId)))
+    .where(and(eq(pageRef.syncRunId, runId), inArray(pageRevision.revisionId, fileHashes)))
   }
 
   async getSearchSections(runId: number, sectionIds: number[]) {
-    const groups = await Promise.all(chunks(sectionIds, 1).map((ids) => this.db.select({
+    return this.db.select({
       id: pageSection.id,
       revisionId: pageSection.revisionId,
       headingId: pageSection.headingId,
@@ -184,8 +173,7 @@ export class SourceWriteRepo {
       .innerJoin(pageRevision, eq(pageRevision.revisionId, pageRef.revisionId))
       .innerJoin(pageSection, eq(pageSection.revisionId, pageRef.revisionId))
       .innerJoin(datasource, and(eq(datasource.id, pageRef.datasourceId), eq(datasource.syncRunId, pageRef.syncRunId)))
-      .where(and(eq(pageRef.syncRunId, runId), inArray(pageSection.id, ids)))))
-    return groups.flat()
+      .where(and(eq(pageRef.syncRunId, runId), inArray(pageSection.id, sectionIds)))
   }
 
   async publishRun(runId: number, slot: SearchSlotId): Promise<void> {

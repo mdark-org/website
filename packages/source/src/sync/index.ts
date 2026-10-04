@@ -1,10 +1,9 @@
-import { type BuiltDatasource } from './snapshot'
+
 import { SourceSyncError, SourceWriteRepo, type DatasourceSnapshot } from '../db/write.repo'
 import { hash } from '../utils/hash'
 import { parsePageSections, SECTION_PARSER_VERSION } from './sections'
 import {Datasource} from "../types";
 import {SourceBuilder} from "../builder";
-export type { BuiltDatasource } from './snapshot.ts'
 export { SOURCE_HEAD_ID, SourceSyncError, SourceWriteRepo } from '../db/write.repo'
 export type { SyncRun } from '../db/write.repo'
 export { parsePageSections, SECTION_PARSER_VERSION } from './sections'
