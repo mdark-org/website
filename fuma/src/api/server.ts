@@ -1,4 +1,4 @@
-import {createDB, DB, SourceWriteRepo} from "@repo/source";
+import { createDB, DB } from "@repo/source";
 import {Hono} from "hono";
 import {env} from 'cloudflare:workers'
 import {searchRoute} from "@/api/routes/search.ts";
@@ -11,6 +11,9 @@ declare global {
       AI_SEARCH: AiSearchNamespace
       SYNC_WORKFLOW: Workflow
       SYNC_TOKEN: string
+      BASE_URL: string
+      GOOGLE_CLIENT_ID: string
+      GOOGLE_CLIENT_SECRET: string
     }
   }
 }

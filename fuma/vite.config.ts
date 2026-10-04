@@ -6,6 +6,9 @@ import { responseStoreAdapter } from "@vinext/cloudflare/cache/response-store-ad
 import { imagesOptimizer } from "@vinext/cloudflare/images/images-optimizer";
 import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
+  server: {
+    port: 3000,
+  },
   resolve: {
     alias: [
     ],

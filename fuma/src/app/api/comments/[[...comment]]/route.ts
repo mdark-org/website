@@ -1,24 +1,25 @@
-import { commentRoute } from '@/comment'
+import { createCommentRoute } from '@/comment'
 
 
-import type { NextRequest } from 'next/server'
+import { NextRequest } from 'next/server'
+const route = createCommentRoute()
 
 export async function GET(_req: NextRequest, context: { params: Promise<{ comment?: string[] | undefined; }> }) {
   // @ts-ignore
-  return commentRoute.GET(_req, context)
+  return route.GET(_req, context)
 }
 
 export async function DELETE(_req: NextRequest, context: { params: Promise<{ comment?: string[] | undefined; }> }) {
   // @ts-ignore
-  return commentRoute.DELETE(_req, context)
+  return route.DELETE(_req, context)
 }
 
 export async function PATCH(_req: NextRequest, context: { params: Promise<{ comment?: string[] | undefined; }> }) {
   // @ts-ignore
-  return commentRoute.PATCH(_req, context)
+  return route.PATCH(_req, context)
 }
 
 export async function POST(_req: NextRequest, context: { params: Promise<{ comment?: string[] | undefined; }> }) {
   // @ts-ignore
-  return commentRoute.POST(_req, context)
+  return route.POST(_req, context)
 }

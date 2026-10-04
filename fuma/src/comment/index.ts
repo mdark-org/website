@@ -1,19 +1,21 @@
 import { NextComment } from "@fuma-comment/server/next";
 import { createDrizzleAdapter } from "@fuma-comment/server/adapters/drizzle";
-import { db } from "@/lib/db";
-import { comments, rates, roles, user } from "@/lib/db/schema";
+import {comments, createDB, rates, roles, users} from "@/lib/db/d1/index.ts";
 import { createBetterAuthAdapter } from "@fuma-comment/server/adapters/better-auth";
-import { auth as betterAuth } from "@/lib/auth";
+import { createAuth } from "@/lib/auth";
 
-export const auth = createBetterAuthAdapter(betterAuth);
 
-export const storage = createDrizzleAdapter({
-  db,
-  schemas: { user, comments, rates, roles },
-  auth: 'better-auth',
-});
+export const createCommentRoute = () => {
+  const db = createDB()
+  const auth = createBetterAuthAdapter(createAuth())
+  const storage = createDrizzleAdapter({
+    db,
+    schemas: { user: users, comments, rates, roles },
+    auth: 'better-auth',
+  });
 
-export const commentRoute = NextComment({
-  auth: auth,
-  storage,
-});
+  return NextComment({
+    auth: auth,
+    storage,
+  });
+}

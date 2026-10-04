@@ -35,9 +35,9 @@ export default async function Page(props: {
       tableOfContent={{enabled: false}}
       footer={{
         enabled: true,
-        // component: <>
-        //   {config.enableComment && <Comments page={page.data!.bvid!}/>}
-        // </>
+        component: <>
+          {config.enableComment && <Comments page={page.data!.bvid!}/>}
+        </>
       }}
     >
       <DocsTitle>{page.data!.title}</DocsTitle>

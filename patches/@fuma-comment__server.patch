@@ -1,0 +1,22 @@
+diff --git a/dist/next/index.js b/dist/next/index.js
+index eac3fcbaff4fae5a7ce0ff46cd1887c8190a4d09..c9d1fe4fb31fb75792253929aab7a48401a7536c 100644
+--- a/dist/next/index.js
++++ b/dist/next/index.js
+@@ -1,7 +1,7 @@
+ import { t as CustomComment } from "../custom-NiVwY9ow.js";
+ import { NextResponse } from "next/server.js";
+ //#region src/next/index.ts
+-const NOT_FOUND = NextResponse.json({ message: "Not Found" }, { status: 404 });
++const NOT_FOUND = () => NextResponse.json({ message: "Not Found" }, { status: 404 });
+ function createResponse(result) {
+ 	if (result.type === "success") return NextResponse.json(result.data);
+ 	return NextResponse.json(result.data, { status: result.status });
+@@ -28,7 +28,7 @@ function NextComment(options) {
+ 		const catchAll = (await context.params).comment.join("/");
+ 		const res = await internal.handleRequest(req.method, catchAll, (params) => createRequest(req, params));
+ 		if (res) return createResponse(res);
+-		return NOT_FOUND;
++		return NOT_FOUND();
+ 	};
+ 	return {
+ 		GET: router,

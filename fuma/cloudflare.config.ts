@@ -42,7 +42,7 @@ export const syncWorker = defineWorker({
     BASE_URL: bindings.secret(),
   },
 });
-export default defineConfig({
+export default defineConfig(({mode, isPreview}) => ({
   worker: defineWorker({
     ...responseStore.applicationWorker,
     name: "fuma",
@@ -52,6 +52,9 @@ export default defineConfig({
     assets: { notFoundHandling: "none" },
     observability: {
       enabled:true,
+      logs: {
+        invocationLogs: false,
+      }
     },
     env: {
       ...responseStore.applicationWorker.env,
@@ -65,12 +68,16 @@ export default defineConfig({
       }),
       SYNC_TOKEN: bindings.secret(),
       GITHUB_TOKEN: bindings.secret(),
-      BASE_URL: bindings.secret(),
+      // bindings.text(isStaging ? "staging" : "production"),
+      // BASE_URL: bindings.text(mode === 'production'? 'https://mdark.org':`http://localhost:3000`),
+      GOOGLE_CLIENT_ID: bindings.secret(),
+      GOOGLE_CLIENT_SECRET: bindings.secret(),
       // Read-only content database; written by the sync Worker (@repo/source).
       // The fixed id is the *local* database (`pnpm d1:migrate:local`), so `vite dev` and the `cf d1 --local`
       // commands share one file under .cloudflare/state. Deploys override it with the real database id.
       DB: bindings.d1({ name: "mdark-dev-source", id: databaseId }),
+      // CDB: bindings.d1({ name: "mdark-comment", id: '8311d274-cbb2-4fb0-b233-5840305e8775' }),
       AI_SEARCH: bindings.aiSearchNamespace({ namespace: aiSearchNamespace, dev: { remote: true } }),
     },
   }),
-});
+}));

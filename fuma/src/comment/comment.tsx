@@ -7,7 +7,7 @@ import { usePathname } from 'fumadocs-core/framework';
 const signIn = (callbackPath: string) => {
   void authClient.signIn.social({
     provider: 'google',
-    callbackURL: `${window.location.origin}${callbackPath}`,
+    // callbackURL: `${window.location.origin}${callbackPath}`,
   });
 };
 const comment = createUploadThingStorage();

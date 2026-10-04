@@ -1,13 +1,7 @@
 import { defineConfig } from "drizzle-kit";
 
-const DATABASE_URL= process.env.DATABASE_URL!
-const pgConfig = defineConfig({
-  schema: "./src/lib/db/schema.ts",
-  out: "./drizzle",
-  dialect: 'postgresql',
-  dbCredentials: {
-    url: DATABASE_URL
-  }
+export default defineConfig({
+  out: "./drizzle/migrations",
+  schema: ["./src/lib/db/d1/index.ts","../packages/source/src/db/schema/content.ts", "../packages/source/src/db/schema/sync.ts"],
+  dialect: 'sqlite',
 })
-
-export default pgConfig

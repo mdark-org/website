@@ -139,7 +139,6 @@ export class SourceWriteRepo {
     await this.db.batch(statements)
     const [saved] = await this.db.select().from(datasource)
       .where(and(eq(datasource.syncRunId, runId), eq(datasource.slug, slug)))
-    console.log('saved tree', saved)
     if (!saved) throw new SourceSyncError(`Could not save datasource ${slug}.`)
     return { datasourceId: saved.id, pages: refs.length }
   }

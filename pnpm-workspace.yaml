@@ -46,6 +46,7 @@ minimumReleaseAgeExclude:
   - '@typescript/typescript-win32-x64@7.1.0-dev.20261002.1'
   - typescript@7.1.0-dev.20261002.1
 patchedDependencies:
+  '@fuma-comment/server': patches/@fuma-comment__server.patch
   fumadocs-core: patches/fumadocs-core.patch
   vinext: patches/vinext.patch
 
