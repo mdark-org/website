@@ -61,8 +61,8 @@ export const config: Config = {
         title: <>MDARK</>,
       },
       links: [
-        { type: 'icon', url: `${baseUrl}/rss`, icon: <Rss />, label: 'RSS' },
-        { type: 'icon', url: `${baseUrl}/tg`, icon: <TelegramIcon />, label: 'Telegram' },
+        { type: 'icon', url: `/rss`, icon: <Rss />, label: 'RSS' },
+        { type: 'icon', url: `/tg`, icon: <TelegramIcon />, label: 'Telegram' },
       ]
     } as BaseLayoutProps,
   },
