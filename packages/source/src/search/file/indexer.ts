@@ -2,7 +2,7 @@ import type {AiSearchInstance} from "@cloudflare/workers-types";
 import {chunk} from "../../utils/chunk";
 import {completedSlotManifest, parseRevisionKey } from "./plan";
 import {deleteSearchBatch, uploadSearchBatch} from "./execute";
-import type {SourceWriteRepo} from "@/db/write.repo";
+import type {SourceWriteRepo} from "../../db/write.repo";
 import {ManifestStore} from "./manifest";
 import {prepareIndexPlan} from "./search";
 

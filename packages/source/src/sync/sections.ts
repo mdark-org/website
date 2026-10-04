@@ -3,8 +3,6 @@ import type { NewPageSection, PageSections } from '../db/schema/content.ts'
 
 export const SECTION_PARSER_VERSION = 1
 
-// 将 content 转为 section[]
-
 type Section = {
   revisionId: string;
   content: string;

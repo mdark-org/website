@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import type { DatasourceInfo, Page, Root } from '../types.ts'
+import type { DatasourceInfo, Page, Root } from '../types'
 import type { DB, pageContent, pageRef, pageRevision } from './schema'
 
 export interface ListPagesQuery {

@@ -18,6 +18,7 @@ searchRoute.get('/search', async (c) => {
   const slot = await repo.getPublishedSearch()
   if(!slot) return c.json([])
   const instance = env.AI_SEARCH.get(`mdark-file-dev-${slot.slot}`)
+  // @ts-ignore
   const res = await  search(repo, instance, { syncRunId: slot.syncRunId, query, tag })
   return c.json(res)
 })

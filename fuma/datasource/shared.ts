@@ -5,4 +5,4 @@ export type Context = {
   }
 }
 
-export type { Root, Folder, DatasourceCreator} from "@repo/datasource/shared";
+export type { Root, Folder } from "@repo/source/types";

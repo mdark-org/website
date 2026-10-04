@@ -1,6 +1,6 @@
 import matter from "gray-matter";
-import {Datasource, Transformers, Page, Root, Folder, metaSchema } from "../shared";
-import {VFilePath} from "../shared";
+import {Datasource, Transformers, Page, Root, Folder, metaSchema } from "../types";
+import {VFilePath} from "../types";
 import {createFSProvider, FSProvider} from "./fs-provider";
 
 

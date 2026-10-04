@@ -1,5 +1,6 @@
 import {addRSSPage, indexFolderTransformer} from "../transformer.ts";
-import {type Context, type DatasourceCreator} from "../shared.ts";
+import {type Context} from "../shared.ts";
+import {type DatasourceCreator} from "@repo/source/types";
 
 const refnews : DatasourceCreator<'github'>= (ctx: Context) => ({
   id: 'btnews_refnews',

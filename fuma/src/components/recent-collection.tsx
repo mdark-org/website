@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Page } from '@repo/datasource/shared';
+import type { Page } from '@repo/source/types';
 import Link from 'fumadocs-core/link';
 import PageItem from './page-item';
 

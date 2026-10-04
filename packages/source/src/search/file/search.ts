@@ -1,5 +1,5 @@
 
-import type {SourceWriteRepo} from "@/db/write.repo";
+import type {SourceWriteRepo} from "../../db/write.repo";
 import {ManifestStore} from "./manifest";
 import {createRunManifest, remainingPlan} from "./plan";
 

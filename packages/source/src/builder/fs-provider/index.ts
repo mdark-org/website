@@ -1,4 +1,4 @@
-import {VFilePath, Datasource } from "../../shared";
+import {VFilePath, Datasource } from "../../types";
 import {UnStorageSourceBuilder} from "./unstorage";
 import {createStorage} from "unstorage";
 import githubDriver from "unstorage/drivers/github";

@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "target": "ESNext",
     "lib": [
       "dom",
@@ -23,9 +22,10 @@
       "@/*": [
         "./src/*"
       ],
-      "content-collections": [
-        "./.content-collections/generated"
-      ]
+//      "@repo/source": [
+//        "./src/*"
+//      ],
+      "*": ["./*"]
     },
     "plugins": [
       {
@@ -38,8 +38,6 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".contentlayer/generated",
-    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

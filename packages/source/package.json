@@ -4,14 +4,22 @@
   "private": true,
   "type": "module",
   "description": "Content database (Cloudflare D1 via drizzle-orm): schema, read API for the app, and the sync that writes it. Migrations are generated in `fuma` (fuma/drizzle.d1.config.ts).",
+  "scripts": {
+    "typecheck": "tsc"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./markdown": "./src/markdown.ts",
     "./search/section": "./src/search/section/index.ts",
     "./search/file": "./src/search/file/index.ts",
+    "./builder": "./src/builder/index.ts",
+    "./types": "./src/types/index.ts",
     "./sync": "./src/sync/index.ts"
   },
   "dependencies": {
+    "feed": "^5.2.1",
+    "unstorage": "1.17.5",
+    "any-date-parser": "^2.2.3",
     "drizzle-orm": "catalog:drizzle",
     "fumadocs-core": "catalog:fumadocs",
     "p-limit": "^7.3.3",
@@ -20,10 +28,13 @@
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0",
     "vfile": "^6.0.3",
-    "zod": "catalog:"
+    "gray-matter": "^4.0.3",
+    "zod": "catalog:",
+    "micromatch": "^4.0.8"
   },
   "devDependencies": {
     "@types/mdast": "^4.0.4",
+    "@types/micromatch": "^4.0.9",
     "@cloudflare/workers-types": "latest"
   }
 }

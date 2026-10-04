@@ -1,6 +1,6 @@
 import type {BuiltinDriverOptions} from "unstorage";
-import { pageSchema } from "./schema";
-import {z} from "zod";
+
+import { Folder, Item, Page, Root} from "./type";
 
 export type VFilePath = {
   path: string
@@ -12,7 +12,7 @@ export type VFilePath = {
   key: string
 }
 
-type DatasourceInternal = {
+type DatasourceInfo = {
   id: string
   name: string
   mountedPath: string
@@ -23,15 +23,11 @@ type DatasourceInternal = {
   icon?: string,
 }
 
-export type DatasourceInfo = DatasourceInternal
-
-export type DatasourceCreator<Opt extends keyof BuiltinDriverOptions, T extends any[] = any[]> = (...param:T) => Datasource<Opt>
-
 export type Datasource<T extends keyof BuiltinDriverOptions | unknown = unknown> = {
   provider: Provider<T>,
   transformers?: Transformers
-} & DatasourceInternal
-
+} & DatasourceInfo
+export type DatasourceCreator<Opt extends keyof BuiltinDriverOptions, T extends any[] = any[]> = (...param:T) => Datasource<Opt>
 type CommonOption = {
   includes?: string[],
   excludes?: string[],
@@ -70,35 +66,3 @@ export type Transformers = Partial<{
   page: Transformer<Page>[]
 }>
 
-
-export type Page = z.infer<typeof pageSchema>
-
-export type Folder = {
-  url: string,
-  name: string,
-  title: string,
-  type: 'folder',
-  defaultOpen?: boolean,
-  root?: boolean,
-  description?: string,
-  icon?: any
-  index?: Page
-  depth: number,
-  $source?: any,
-  children: (Folder|Page) []
-}
-
-
-export type Node = (Folder | Page) & {
-  children: Node[]
-  [x: string]: any
-}
-
-export type Root = Folder & {
-  root: true
-}
-
-
-export type Item = Root | Folder | Page
-
-export * from './schema'

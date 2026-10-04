@@ -1,5 +1,6 @@
-import { syncApp } from './http.ts';
+import {sync} from "@/api/routes/sync.ts";
+
 export { SourceSyncWorkflow } from './workflow';
 export default {
-  fetch: syncApp.fetch
+  fetch: sync.fetch
 };

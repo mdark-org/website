@@ -1,4 +1,4 @@
-import type { FolderTransformer, RootTransformer } from "@repo/datasource/shared";
+import type { FolderTransformer, RootTransformer } from "@repo/source/types";
 import * as parser from "any-date-parser";
 const parserAsDate = <T = null>(x: Date|string | undefined | null, fallback: T | null = null): Date | T => {
   if(typeof x === 'string') {
@@ -46,7 +46,6 @@ export const dateFolderTransformer: FolderTransformer = {
       }
       return 0
     })
-    console.log("sorted", JSON.stringify(folder.children.map(it => it.url)))
   }
 }
 

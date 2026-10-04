@@ -1,5 +1,5 @@
 import { cn } from '@/lib/cn';
-import { Page } from '@repo/datasource/shared';
+import { Page } from '@repo/source/types';
 import Link from 'fumadocs-core/link';
 import React from 'react';
 import {parserAsDate} from "@/lib/date";

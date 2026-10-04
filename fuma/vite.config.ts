@@ -9,13 +9,7 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-  resolve: {
-    alias: [
-    ],
-  },
   optimizeDeps: {
-    include: [
-    ],
     exclude: ["fumadocs-ui", "fumadocs-core"],
   },
   plugins: [
@@ -25,7 +19,6 @@ export default defineConfig({
       prerender: { routes: "*" },
       images: { optimizer: imagesOptimizer() },
     }),
-    // Runs the RSC environment in workerd so `cloudflare:workers` bindings (D1 `DB`) work in dev and build.
     cloudflare({
       auxiliaryWorkers: [
         { config: responseStoreServiceBinding },

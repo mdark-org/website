@@ -1,12 +1,11 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "target": "ESNext",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "noEmit": false,
+    "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -15,7 +14,7 @@
     "jsx": "preserve",
     "types": ["@cloudflare/workers-types"],
     "paths": {
-      "@/*": ["./src/*"]
+      "*" : ["./*"]
     }
   },
   "include": ["src/**/*.ts"],

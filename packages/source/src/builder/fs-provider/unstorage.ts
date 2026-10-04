@@ -1,6 +1,6 @@
 import { Storage } from "unstorage";
 import micromatch from "micromatch";
-import { Datasource, VFilePath } from "../../shared";
+import { Datasource, VFilePath } from "../../types";
 import { FSProvider } from "./index";
 
 import pLimit from "p-limit";

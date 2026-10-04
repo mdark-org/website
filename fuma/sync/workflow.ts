@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep, type WorkflowStepConfig } from 'cloudflare:workers'
 import { NonRetryableError } from 'cloudflare:workflows'
-import { SourceBuilder } from '@repo/datasource/build'
+import { SourceBuilder } from '@repo/source/builder'
 import { getDatasourceSlug, SourceSyncError, SourceWriteRepo, syncDatasource } from '@repo/source/sync'
 import { datasources } from '../datasource/index.ts'
 import type { SyncEnv, SyncParams } from './types.ts'

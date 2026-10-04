@@ -1,18 +1,19 @@
-import { getDatasourceSlug, SourceWriteRepo } from '@repo/source/sync';
-import { datasources } from '../datasource/index.ts';
-import type { SyncEnv } from './types.ts';
-import { Hono } from 'hono';
-import z from 'zod';
-import {env} from 'cloudflare:workers'
+import {Hono} from "hono";
+import type {SyncEnv} from "../../../sync/types.ts";
+import {getDatasourceSlug, SourceWriteRepo} from "@repo/source";
+import {env} from "cloudflare:workers";
+import z from "zod";
+import {datasources} from "../../../datasource";
+
 type Variables = {
   repo: SourceWriteRepo;
 }
-export const syncApp = new Hono<{
+
+export const sync = new Hono<{
   Bindings: SyncEnv;
   Variables: Variables
 }>()
   .use('*', async (c, next) => {
-    // const env = c.env
     const token = env.SYNC_TOKEN
     if (!token) return c.json({ error: 'Sync authentication is not configured.' }, { status: 503 });
     if (c.req.header('Authorization') !== `Bearer ${token}`) {
