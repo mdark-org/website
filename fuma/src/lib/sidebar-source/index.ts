@@ -1,9 +1,9 @@
-import type { DatasourceInfo, Root } from '@repo/source'
+import type { DatasourceInfo } from '@repo/source'
 import { icon } from '@/lib/source/icon'
 import { getReader } from '@/lib/source/reader'
-
+import { Root } from "fumadocs-core/page-tree"
 /** A datasource reduced to its root node (no children): cheap, and needs no tree query. */
-const stub = (d: DatasourceInfo): Root => ({
+const stub = (d: DatasourceInfo) => ({
   type: 'folder',
   root: true,
   name: d.name,
@@ -32,6 +32,7 @@ export const sidebarSource = {
         return tree ? { ...tree, icon: icon(tree.icon) } : stub(d)
       }),
     )
-    return { name: 'root', children }
+    return { name: 'root', children } as Root
   },
 }
+

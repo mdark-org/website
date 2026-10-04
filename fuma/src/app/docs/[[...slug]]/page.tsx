@@ -8,21 +8,13 @@ import { Comments } from '@/comment/comment'
 import { config } from '../../../../config'
 import { renderMarkdown } from '@/lib/markdown';
 import {ImageZoom} from "@/components/image-zoom.tsx";
-import { sidebarSource } from "@/lib/sidebar-source";
-import { DocsLayout } from 'fumadocs-ui/layouts/docs';
-import type { ReactNode } from "react";
-import { baseOptions } from "@/app/layout.config";
 
 export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
 
   const params = await props.params;
-
-  const { slug } = params;
   const slugs = params.slug?.map(it => decodeURIComponent(it));
-  const tree = await sidebarSource.getSidebarTree(slugs);
-  console.log(tree)
   if(slugs == undefined || slugs.length == 0) {
     const first = await source.getFirstPage()
     if (!first) notFound();
@@ -43,9 +35,9 @@ export default async function Page(props: {
       tableOfContent={{enabled: false}}
       footer={{
         enabled: true,
-        component: <>
-          {config.enableComment && <Comments page={page.data!.bvid!}/>}
-        </>
+        // component: <>
+        //   {config.enableComment && <Comments page={page.data!.bvid!}/>}
+        // </>
       }}
     >
       <DocsTitle>{page.data!.title}</DocsTitle>

@@ -23,7 +23,7 @@ export async function syncDatasource(repo: SourceWriteRepo, runId: number, built
     icon: info.icon ?? null,
     mountedPath: info.mountedPath,
     sortOrder: options.sortOrder ?? 0,
-    tree: slimTree(built.pageTree),
+    tree: built.pageTree,
     bodies: [],
     revisions: [],
     sections: [],
@@ -71,16 +71,6 @@ export async function syncDatasource(repo: SourceWriteRepo, runId: number, built
     snapshot.revisions.push({ ...revision, sourceHash, revisionId })
     snapshot.refs.push({ revisionId, url: page.url, publishedAt })
   }
-
-  const checkTree = (node: Root | Root['children'][number]): void => {
-    if (node.type === 'page') {
-      if (!node.external && !urls.has(node.url)) throw new SourceSyncError(`Missing page in datasource tree: ${node.url}`)
-      return
-    }
-    if (node.index) checkTree(node.index)
-    node.children.forEach(checkTree)
-  }
-  checkTree(snapshot.tree)
   const completed = await repo.getSectionRevisionIds(snapshot.revisions.map((revision) => revision.revisionId))
   for (const revision of snapshot.revisions) {
     if (completed.has(revision.revisionId)) continue

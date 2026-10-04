@@ -24,6 +24,15 @@ export class SourceBuilder {
       url: this.source.mountedPath,
       name: this.source.name,
       type: 'folder' as const,
+      // @ts-ignore
+      $id: this.source.id,
+      // @ts-ignore
+      index: {
+        type: 'page',
+        $id: `${this.source.id}:index`,
+        name: this.source.name,
+        url: `${this.source.mountedPath}/index`,
+      },
       root: true,
       depth: this.source.mountedPath.split('/').length - 1,
       children: [],

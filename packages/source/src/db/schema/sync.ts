@@ -26,7 +26,7 @@ export const datasource = sqliteTable('datasources', {
   icon: text('icon'),
   mountedPath: text('mounted_path').notNull(),
   sortOrder: integer('sort_order').notNull(),
-  tree: text('tree', { mode: 'json' }).$type<Root>().notNull(),
+  tree: text('tree', { mode: 'json' }).$type<Root>(),
   syncRunId: integer('sync_run_id'),
 }, (t) => [
   uniqueIndex('datasource_slug_index').on(t.slug),

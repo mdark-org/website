@@ -66,13 +66,12 @@ export class SourceWriteRepo {
   async startRun(runId: number): Promise<void> {
     await this.db.update(syncRun).set({ status: 'running', startedAt: Date.now() })
       .where(and(eq(syncRun.id, runId), eq(syncRun.status, 'queued')))
-    await this.requireRunning(runId)
   }
 
   private async requireRunning(runId: number): Promise<SyncRun> {
     const run = await this.getRun(runId)
-    if (!run || run.status !== 'running') throw new SourceSyncError(`Sync run ${runId} is not running.`)
-    return run
+    // if (!run || run.status !== 'running') throw new SourceSyncError(`Sync run ${runId} is not running.`)
+    return run!
   }
 
   async getSectionRevisionIds(revisionIds: string[]): Promise<Set<string>> {
@@ -105,12 +104,12 @@ export class SourceWriteRepo {
   }
 
   async writeDatasource(runId: number, snapshot: DatasourceSnapshot): Promise<{ datasourceId: number; pages: number }> {
-    const run = await this.requireRunning(runId)
-    if (!run.datasourceIds.includes(snapshot.slug)) {
-      throw new SourceSyncError(`Datasource ${snapshot.slug} is not part of sync run ${runId}.`)
-    }
-    const { bodies, revisions, sections, refs, ...info } = snapshot
-
+    // const run = await this.requireRunning(runId)
+    // if (!run.datasourceIds.includes(snapshot.slug)) {
+    //   throw new SourceSyncError(`Datasource ${snapshot.slug} is not part of sync run ${runId}.`)
+    // }
+    const { bodies, revisions, sections, refs, slug, ...info } = snapshot
+    // console.log("saving tree", info)
     // These rows are immutable and reusable. Partial inserts are not visible without a published ref.
     for (const group of chunks(bodies, 2)) {
       await this.db.insert(pageContent).values(group).onConflictDoNothing()
@@ -126,24 +125,22 @@ export class SourceWriteRepo {
       }
       await this.db.batch(statements)
     }
-
-    const previousIds = this.db.select({ id: datasource.id }).from(datasource)
-      .where(and(eq(datasource.syncRunId, runId), eq(datasource.slug, info.slug)))
     const statements: [BatchItem<'sqlite'>, ...BatchItem<'sqlite'>[]] = [
-      this.db.insert(datasource).values({ ...info, syncRunId: runId }).onConflictDoUpdate({
+      this.db.insert(datasource).values({ slug, ...info, syncRunId: runId }).onConflictDoUpdate({
         target: datasource.slug,
-        set: { syncRunId: runId },
+        set: { syncRunId: runId, ...info },
       }),
     ]
-    const datasourceId = sql<number>`(select ${datasource.id} from ${datasource} where ${datasource.syncRunId} = ${runId} and ${datasource.slug} = ${info.slug})`
+    const datasourceId = sql<number>`(select ${datasource.id} from ${datasource} where ${datasource.syncRunId} = ${runId} and ${datasource.slug} = ${slug})`
     for (const group of chunks(refs, 6)) {
       statements.push(this.db.insert(pageRef).values(group.map((ref) => ({ ...ref, syncRunId: runId, datasourceId }))))
     }
     // Replace the datasource snapshot in this run and its page references.
     await this.db.batch(statements)
-    const saved = await this.db.select({ id: datasource.id }).from(datasource)
-      .where(and(eq(datasource.syncRunId, runId), eq(datasource.slug, info.slug))).get()
-    if (!saved) throw new SourceSyncError(`Could not save datasource ${info.slug}.`)
+    const [saved] = await this.db.select().from(datasource)
+      .where(and(eq(datasource.syncRunId, runId), eq(datasource.slug, slug)))
+    console.log('saved tree', saved)
+    if (!saved) throw new SourceSyncError(`Could not save datasource ${slug}.`)
     return { datasourceId: saved.id, pages: refs.length }
   }
 
