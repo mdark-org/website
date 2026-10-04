@@ -4,7 +4,7 @@ import { DocsPage, DocsDescription, DocsTitle, DocsBody } from 'fumadocs-ui/layo
 import { notFound, redirect } from 'next/navigation'
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import Video from '@/app/docs/[[...slug]]/video'
-import { Comments } from '@/comment/comment'
+import { Comments } from '@/components/comment.tsx'
 import { config } from '../../../../config'
 import { renderMarkdown } from '@/lib/markdown';
 import {ImageZoom} from "@/components/image-zoom.tsx";

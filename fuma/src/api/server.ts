@@ -3,6 +3,8 @@ import {Hono} from "hono";
 import {env} from 'cloudflare:workers'
 import {searchRoute} from "@/api/routes/search.ts";
 import {syncApp} from "../../sync/http.ts";
+import {createAuth} from "@/lib/auth.ts";
+import {uploadHandler} from "@/lib/uploadthing.ts";
 
 declare global {
   namespace Cloudflare {
@@ -32,8 +34,10 @@ app.use(async (c, next) => {
   await next();
 })
 
-
+app.on(["POST", "GET"], "/api/auth/*", (c) => {
+  return createAuth().handler(c.req.raw);
+});
 app.route('/', searchRoute)
 app.route('/', syncApp)
-
+app.all("/api/uploadthing", (context) => uploadHandler(context.req.raw));
 export default app;

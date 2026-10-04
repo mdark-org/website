@@ -1,6 +1,6 @@
 import { and, eq, inArray } from 'drizzle-orm'
 import { pageRef, pageRevision, pageSection } from './schema/content'
-import { datasource, sourceHeads, type SearchSlotId } from './schema/sync'
+import { sourceHeads, type SearchSlotId } from './schema/sync'
 import type { DB } from './schema/index.ts'
 
 export interface PublishedSearch {
