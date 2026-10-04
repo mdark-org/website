@@ -15,7 +15,7 @@ export const revisionKey = (file: SearchFileItem) => `page/${file.revisionId}.md
 
 export type SearchItemInput = Awaited<ReturnType<SourceWriteRepo['getSearchFiles']>>[number]
 
-export function createSearchItem(revision: SearchItemInput) {
+function createSearchItem(revision: SearchItemInput) {
   return {
     itemKey: `page/${revision.revisionId}.md`,
     content: revision.content,

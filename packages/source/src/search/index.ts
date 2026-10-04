@@ -5,7 +5,7 @@ import {DB} from "../db/schema";
 import {SourceWriteRepo} from "../db/write.repo";
 import {createFileDocsLoader, revisionKey} from "./file";
 import {createSectionDocsLoader, sectionKey} from "./section";
-
+export * from './shared/search'
 type SyncStatus = {
   activeSlot?: 'a' | 'b' | null,
   syncRunId: number

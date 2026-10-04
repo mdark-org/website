@@ -38,6 +38,6 @@ export function createSearchItem(section: SearchItemInput): SearchableContent {
   return {
     itemKey: `page/${section.revisionId}/section/${section.id}.md`,
     content: `# ${section.pageTitle}${heading}\n\n${section.content}`,
-    metadata: { pagesectionid: String(section.id), tag: section.tag, locale: 'zh-cn' },
+    metadata: { pagesectionid: String(section.id), tag: section.tag, url: section.url, locale: 'zh-cn' },
   }
 }
