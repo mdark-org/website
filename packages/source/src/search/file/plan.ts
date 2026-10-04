@@ -1,31 +1,27 @@
-import type {IndexPlan, RunCheckpoint, RunManifest, SlotManifest} from './manifest'
+import type {RunCheckpoint, RunManifest, SlotManifest} from "./manifest";
+import type {IndexPlan} from "./manifest";
 
-type SearchSectionItem = {
-  sectionId: number;
+type SearchFileItem = {
   revisionId: string;
 }
 
-const sectionKeyRegex = /page\/(.+)\/section\/(.+)\.md/
+const revisionKeyRegex = /page\/(.+)\.md/
 
-export const parseSectionKey = (item: string) => {
-  const [, pageRevisionId, sectionId] = item.match(sectionKeyRegex)!
-  return {
-    pageRevisionId,
-    pageSectionId: Number(sectionId),
-  }
+export const parseRevisionKey = (item: string) => {
+  const [, pageRevisionId] = item.match(revisionKeyRegex)!
+  return { pageRevisionId }
 }
-
 
 export function createRunManifest({ runId, slot, previous, current }: {
   runId: number
   slot: 'a' | 'b'
   previous: SlotManifest | null
-  current: SearchSectionItem[]
+  current: SearchFileItem[]
 }): RunManifest {
   const previousItems = previous?.items ?? []
-  const sectionKey = (section: SearchSectionItem) => `page/${section.revisionId}/section/${section.sectionId}.md`
+  const fileKey = (file: SearchFileItem) => `page/${file.revisionId}.md`
   // 期望的所有 SectionItemKey
-  const expectedItemKey = new Set(current.map((section) => (sectionKey(section))))
+  const expectedItemKey = new Set(current.map((file) => (fileKey(file))))
   // 实际包含的 ItemKey
   const previousItemKey = new Set(previousItems.map((item) => (item.itemKey)))
   const upsertItemKey = Array.from(expectedItemKey.difference(previousItemKey))
@@ -51,11 +47,13 @@ export function remainingPlan(plan: IndexPlan, checkpoint: RunCheckpoint): Index
 
 export function completedSlotManifest(runId: number, previous: SlotManifest | null, checkpoint: RunCheckpoint): SlotManifest {
   const removed = new Set(checkpoint.removed)
+  const keep = (previous?.items ?? []).filter(({itemKey}) => !removed.has(itemKey))
+  const upserted = checkpoint.upserted
   return {
     syncRunId: runId,
-    items: Object.fromEntries([
-      ...Object.entries(previous?.items ?? {}).filter(([key]) => !removed.has(key)),
-      ...checkpoint.upserted.map(({ itemKey, itemId }): [string, string] => [itemKey, itemId]),
-    ]),
+    items: [
+      ...keep,
+      ...upserted,
+    ],
   }
 }

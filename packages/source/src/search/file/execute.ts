@@ -1,32 +1,39 @@
 import type { AiSearchInstance } from '@cloudflare/workers-types'
 import pLimit from 'p-limit'
-import { SourceSyncError, type SourceWriteRepo } from '../db/write.repo'
-import { createSearchItem } from './item'
+import { SourceSyncError, type SourceWriteRepo } from '../../db/write.repo'
 import type { RunCheckpoint, RunManifest } from './manifest'
 
+export type SearchItemInput = Awaited<ReturnType<SourceWriteRepo['getSearchFiles']>>[number]
+
+export function createSearchItem(revision: SearchItemInput) {
+  return {
+    itemKey: `page/${revision.revisionId}.md`,
+    content: revision.content,
+    metadata: { revisionid: String(revision.revisionId), url: revision.url, tag: revision.tag, locale: 'zh-cn' },
+  }
+}
 type BatchResult<T> = {
   processed: T[]
   failure: PromiseRejectedResult | null
 }
 
-type SearchableSection = {
-  pageSectionId: number
+type SearchableFile = {
   pageRevisionId: string
 }
 
-export async function uploadSearchBatch({ instance, repo, runId, sectionItems }: {
+export async function uploadSearchBatch({ instance, repo, runId, revisionItems }: {
   instance: AiSearchInstance
   repo: SourceWriteRepo
   runId: number
-  sectionItems: SearchableSection[]
+  revisionItems: SearchableFile[]
 }): Promise<BatchResult<RunCheckpoint['upserted'][number]>> {
-  const sectionIds = sectionItems.map((entry) => entry.pageSectionId)
-  const sections = await repo.getSearchSections(runId, sectionIds)
+  const revisionIds = revisionItems.map((entry) => entry.pageRevisionId)
+  const revisions = await repo.getSearchFiles(runId, revisionIds)
   const limit = pLimit({ concurrency: 10, rejectOnClear: true })
   const result: BatchResult<RunCheckpoint['upserted'][number]> = { processed: [], failure: null }
-  await Promise.allSettled(sections.map((section) => limit(async () => {
+  await Promise.allSettled(revisions.map((revision) => limit(async () => {
     try {
-      const input = createSearchItem(section)
+      const input = createSearchItem(revision)
       const item = await instance.items.upload(input.itemKey, input.content, { metadata: input.metadata })
       result.processed.push({ itemKey: input.itemKey, itemId: item.id })
     } catch (reason) {

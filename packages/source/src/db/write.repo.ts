@@ -153,6 +153,28 @@ export class SourceWriteRepo {
       .innerJoin(pageSection, eq(pageSection.revisionId, pageRef.revisionId))
       .where(eq(pageRef.syncRunId, runId))
   }
+  async listSearchFiles(runId: number) {
+    return this.db.select({ revisionId: pageRef.revisionId })
+      .from(pageRef)
+      .where(eq(pageRef.syncRunId, runId))
+  }
+
+  async getSearchFiles(runId: number, fileHashes: string[]) {
+    const groups = await Promise.all(chunks(fileHashes, 1).map((ids) => this.db.select({
+      revisionId: pageRevision.revisionId,
+      headingId: pageRevision.title,
+      headingTitle: pageRevision.title,
+      content: pageContent.markdown,
+      pageTitle: pageRevision.title,
+      url: pageRef.url,
+      tag: datasource.slug,
+    }).from(pageRef)
+      .innerJoin(pageRevision, eq(pageRevision.revisionId, pageRef.revisionId))
+      .innerJoin(pageContent, eq(pageContent.hash, pageRevision.contentHash))
+      .innerJoin(datasource, and(eq(datasource.id, pageRef.datasourceId), eq(datasource.syncRunId, pageRef.syncRunId)))
+      .where(and(eq(pageRef.syncRunId, runId), inArray(pageRevision.revisionId, ids)))))
+    return groups.flat()
+  }
 
   async getSearchSections(runId: number, sectionIds: number[]) {
     const groups = await Promise.all(chunks(sectionIds, 1).map((ids) => this.db.select({

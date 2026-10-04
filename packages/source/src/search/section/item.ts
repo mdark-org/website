@@ -1,4 +1,4 @@
-import type { SourceWriteRepo } from '../db/write.repo'
+import type { SourceWriteRepo } from '../../db/write.repo'
 
 export type SearchItemInput = Awaited<ReturnType<SourceWriteRepo['getSearchSections']>>[number]
 

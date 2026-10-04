@@ -1,4 +1,4 @@
-import { SearchReadRepo, type PublishedSearch, type SearchSectionResult } from '../db/search-read.repo'
+import { SearchReadRepo, type PublishedSearch, type SearchSectionResult } from '../../db/search-read.repo'
 export { SearchReadRepo }
 export type { PublishedSearch, SearchSectionResult }
 export { indexSearchSlot } from './index-search'

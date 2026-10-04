@@ -6,7 +6,8 @@ import { getDatasourceSlug, SourceSyncError, SourceWriteRepo, syncDatasource } f
 import { datasources } from '../datasource/index.ts'
 import type { SyncEnv, SyncParams } from './types.ts'
 import { createDB } from '@repo/source'
-import { indexSearchSlot, ManifestStore } from '@repo/source/search'
+// import { indexSearchSlot, ManifestStore } from '@repo/source/search/section'
+import { indexFileSlot, ManifestStore } from '@repo/source/search/file'
 
 async function stopOnSyncError<T>(operation: () => Promise<T>): Promise<T> {
   try {
@@ -51,7 +52,7 @@ export class SourceSyncWorkflow extends WorkflowEntrypoint<SyncEnv, SyncParams> 
 
       const head = await step.do('capture-search-head', () => repo.getHead())
       const slot = head?.searchSlot === 'a' ? 'b' : 'a'
-      const instance = this.env.AI_SEARCH.get(`mdark-dev-${slot}`)
+      const instance = this.env.AI_SEARCH.get(`mdark-file-dev-${slot}`)
       const manifestStore = new ManifestStore(this.env.SEARCH_MANIFESTS, slot, runId)
       await step.do('index-search-slot', {
         retries: {
@@ -60,7 +61,7 @@ export class SourceSyncWorkflow extends WorkflowEntrypoint<SyncEnv, SyncParams> 
           delay: '10 seconds',
         },
         timeout: '1 hour',
-      }, () => stopOnSyncError(() => indexSearchSlot({
+      }, () => stopOnSyncError(() => indexFileSlot({
         instance, repo, manifestStore, runId, slot,
       })))
       await step.do('publish-run', () => stopOnSyncError(() => repo.publishRun(runId, slot)))

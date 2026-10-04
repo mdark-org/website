@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./markdown": "./src/markdown.ts",
-    "./search": "./src/search/index.ts",
+    "./search/section": "./src/search/section/index.ts",
+    "./search/file": "./src/search/file/index.ts",
     "./sync": "./src/sync/index.ts"
   },
   "dependencies": {
