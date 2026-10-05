@@ -75,10 +75,10 @@ export class SourceReadRepo implements ISourceReadRepo {
 
   async getPageTree(datasourceId: number): Promise<Root | null> {
     const row = await this.db.query.datasource.findFirst({
-      columns: { tree: true },
+      columns: { tree: true, syncRunId: true },
       where: { id: datasourceId, syncRun: currentRun },
     })
-    return row?.tree ?? null
+    return row?.tree ? { ...row.tree, $id: `datasource:${datasourceId}:run:${row.syncRunId}` } : null
   }
 
   async getPage(url: string, options: { content?: boolean } = {}): Promise<Page | null> {

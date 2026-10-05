@@ -24,7 +24,7 @@ export type Node = (Folder | Page) & {
   [x: string]: any
 }
 
-export type Root = Folder & { root: true }
+export type Root = Folder & { root: true; $id?: string }
 
 
 export type Item = Root | Folder | Page

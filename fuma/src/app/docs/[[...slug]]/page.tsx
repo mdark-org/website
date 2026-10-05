@@ -22,6 +22,7 @@ export default async function Page(props: {
   }
   const page = await source.getPageBySlug(['docs',...slugs])
   if (!page) notFound();
+  if (page.url !== `/docs/${slugs.join('/')}`) redirect(encodeURI(page.url));
   const compiled = await renderMarkdown(page.data?.content ?? '', {
     ...defaultMdxComponents,
     img: ({ src, alt, ...props }) => typeof src === 'string'
@@ -85,6 +86,7 @@ export async function generateMetadata(props: {
     source.getDatasourceBySlug(['docs', ...slugs]),
   ]);
   if (!page) notFound();
+  if (page.url !== `/docs/${slugs.join('/')}`) redirect(encodeURI(page.url));
   const icons = {
       icon: [{
           url: datasource?.icon ? `${config.baseUrl}${datasource.icon}` : `${config.baseUrl}/favicon.ico`,

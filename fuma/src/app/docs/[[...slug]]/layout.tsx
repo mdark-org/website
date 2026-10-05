@@ -1,7 +1,7 @@
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import type { ReactNode } from "react";
 import { baseOptions } from "@/app/layout.config";
-import { sidebarSource } from "@/lib/sidebar-source";
+import { source } from "@/lib/source";
 
 export default async function Layout({
   children,
@@ -12,9 +12,9 @@ export default async function Layout({
 }) {
   const { slug } = await params;
   const slugs = slug?.map((it) => decodeURIComponent(it));
-  const tree = await sidebarSource.getSidebarTree(slugs);
+  const { tabs, tree } = await source.getNavigation(slugs);
   return (
-    <DocsLayout tree={tree} {...baseOptions}>
+    <DocsLayout {...baseOptions} tree={tree} tabs={tabs}>
       {children}
     </DocsLayout>
   );
