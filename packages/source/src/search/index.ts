@@ -2,9 +2,9 @@ import {AiSearchInstance, AiSearchNamespace, R2Bucket} from "@cloudflare/workers
 import {ManifestStore} from "./shared/manifest";
 import {indexer} from "./shared/indexer";
 import {DB} from "../db/schema";
-import {SourceWriteRepo} from "../db/write.repo";
 import {createFileDocsLoader, createFileItemsLoader, revisionKey} from "./file";
 import {createSectionDocsLoader, createSectionItemsLoader, sectionKey} from "./section";
+import {SearchReadRepo} from "../db/search-read.repo";
 export * from './shared/search'
 type SyncStatus = {
   slot: string,
@@ -39,7 +39,7 @@ export function uploadToAISearch(options: UploadOptions) {
   const runId = options.status.syncRunId
   const instance = options.aiSearch
   const manifestStore = new ManifestStore(options.bucket, slot, options.status.syncRunId)
-  const repo = new SourceWriteRepo(options.db)
+  const repo = new SearchReadRepo(options.db)
 
   const keyGetter = keyGetterMap[options.type]
   const docsLoader = docsLoaderMap[options.type](repo, runId)
