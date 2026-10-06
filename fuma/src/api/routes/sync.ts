@@ -1,12 +1,12 @@
 import {Hono} from "hono";
 import type {SyncEnv} from "../../../sync/types.ts";
-import {getDatasourceSlug, SourceWriteRepo} from "@repo/source";
+import { SyncRunRepo } from "@repo/source";
 import {env} from "cloudflare:workers";
 import z from "zod";
 import {datasources} from "../../../datasource";
 
 type Variables = {
-  repo: SourceWriteRepo;
+  repo: SyncRunRepo;
 }
 
 export const sync = new Hono<{
@@ -19,12 +19,13 @@ export const sync = new Hono<{
     if (c.req.header('Authorization') !== `Bearer ${token}`) {
       return c.json({ error: 'Unauthorized.' }, { status: 401 });
     }
-    c.set('repo', new SourceWriteRepo(c.get('db')))
+    c.set('repo', new SyncRunRepo(c.get('db')))
     await next();
   })
   .post('/sync', async (c) => {
     const repo = c.get('repo')
-    const run = await repo.createRun(datasources.map((source) => getDatasourceSlug(source.mountedPath)));
+    const datasourceIds = datasources.map((source) => source.id)
+    const run = await repo.createRun(datasourceIds);
     const workflowId = `sync-${run.id}`;
     try {
       await env.SYNC_WORKFLOW.create({ id: workflowId, params: { runId: run.id } });

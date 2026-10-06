@@ -3,8 +3,8 @@ import koalaOssDs from "./sources/koala-oss.ds.ts";
 import refnewsDs from "./sources/refnews.ds.ts";
 import opinionDs from "./sources/opinion.ds.ts";
 import slangDs from "./sources/slang.ds.ts";
-import type { Datasource } from "@repo/source/types";
 import jhonKhanDs from "./sources/jhon-khan.ds.ts";
+import type { Datasource } from "@repo/source/builder";
 
 const ctx = {
   env: {

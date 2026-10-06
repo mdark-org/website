@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import type { DatasourceInfo, Page, Root } from '../types'
+import { DatasourceInfo, Folder, Page, PageWithContent } from '../types'
 import type { DB, pageContent, pageRef, pageRevision } from './schema'
 
 export interface ListPagesQuery {
@@ -13,15 +13,15 @@ export interface ListPagesQuery {
 export interface ISourceReadRepo {
   listDatasource(): Promise<DatasourceInfo[]>
   getDatasource(idOrSlug: number | string): Promise<DatasourceInfo | null>
-  getPageTree(datasourceId: number): Promise<Root | null>
+  getPageTree(datasourceId: number): Promise<Folder | null>
   getPage(url: string, options?: { content?: boolean }): Promise<Page | null>
-  listPages(query?: ListPagesQuery, options?: { content?: boolean }): Promise<Page[]>
+  listPages(query?: ListPagesQuery, options?: { content?: boolean }): Promise<PageWithContent[]>
 }
 
 const currentRun = { sourceHead: { id: 'current' } }
 const datasourceColumns = { id: true, slug: true, name: true, description: true, icon: true, mountedPath: true, sortOrder: true } as const
 const pageColumns = { url: true, datasourceId: true } as const
-const revisionColumns = { title: true, description: true, tags: true, metadata: true, filename: true, ext: true, publishedAt: true } as const
+const revisionColumns = { revisionId: true, title: true, description: true, tags: true, metadata: true, filename: true, ext: true, publishedAt: true } as const
 
 type ReadPage = Pick<typeof pageRef.$inferSelect, keyof typeof pageColumns> & {
   revision: Pick<typeof pageRevision.$inferSelect, keyof typeof revisionColumns> & {
@@ -29,13 +29,14 @@ type ReadPage = Pick<typeof pageRef.$inferSelect, keyof typeof pageColumns> & {
   }
 }
 
-function toPage(ref: ReadPage): Page {
+
+function toPage(ref: ReadPage): PageWithContent {
   const revision = ref.revision
   return {
     url: ref.url,
     datasourceId: ref.datasourceId,
     name: revision.title,
-    title: revision.title,
+    $id: revision.revisionId,
     type: 'page',
     filename: revision.filename ?? undefined,
     ext: revision.ext ?? undefined,
@@ -43,10 +44,10 @@ function toPage(ref: ReadPage): Page {
       title: revision.title,
       description: revision.description ?? undefined,
       tags: revision.tags ?? undefined,
-      date: revision.publishedAt !== 0 ? new Date(revision.publishedAt) : undefined,
+      date: revision.publishedAt,
       ...revision.metadata,
-      ...(revision.content ? { content: revision.content.markdown } : {}),
     },
+    ...(revision.content ? { content: revision.content.markdown } : {}),
   }
 }
 
@@ -73,7 +74,7 @@ export class SourceReadRepo implements ISourceReadRepo {
     }) ?? null
   }
 
-  async getPageTree(datasourceId: number): Promise<Root | null> {
+  async getPageTree(datasourceId: number): Promise<Folder | null> {
     const row = await this.db.query.datasource.findFirst({
       columns: { tree: true, syncRunId: true },
       where: { id: datasourceId, syncRun: currentRun },
@@ -83,7 +84,7 @@ export class SourceReadRepo implements ISourceReadRepo {
 
   async getPage(url: string, options: { content?: boolean } = {}): Promise<Page | null> {
     const ref = await this.db.query.pageRef.findFirst({
-      columns: pageColumns,
+      columns: { url: true, datasourceId: true },
       where: { url, syncRun: currentRun },
       with: { revision: { columns: revisionColumns, with: { content: options.content ? { columns: { markdown: true } } : false } } },
     })
@@ -92,7 +93,7 @@ export class SourceReadRepo implements ISourceReadRepo {
 
   async listPages(query: ListPagesQuery = {}, options: { content?: boolean } = {}): Promise<Page[]> {
     const refs = await this.db.query.pageRef.findMany({
-      columns: pageColumns,
+      columns: { url: true, datasourceId: true },
       where: {
         syncRun: currentRun,
         datasourceId: query.datasourceId,

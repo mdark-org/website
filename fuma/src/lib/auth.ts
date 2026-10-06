@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import * as table from './db/d1'
 import { drizzleAdapter } from '@better-auth/drizzle-adapter/relations-v2';
-import {createDB} from "./db/d1";
+import {createDB} from "./db/db";
 import {env} from 'cloudflare:workers'
 export const createAuth = () => {
   const db = createDB()

@@ -1,19 +1,19 @@
-import {AiSearchNamespace, R2Bucket} from "@cloudflare/workers-types";
+import {AiSearchInstance, AiSearchNamespace, R2Bucket} from "@cloudflare/workers-types";
 import {ManifestStore} from "./shared/manifest";
 import {indexer} from "./shared/indexer";
 import {DB} from "../db/schema";
 import {SourceWriteRepo} from "../db/write.repo";
-import {createFileDocsLoader, revisionKey} from "./file";
-import {createSectionDocsLoader, sectionKey} from "./section";
+import {createFileDocsLoader, createFileItemsLoader, revisionKey} from "./file";
+import {createSectionDocsLoader, createSectionItemsLoader, sectionKey} from "./section";
 export * from './shared/search'
 type SyncStatus = {
-  activeSlot?: 'a' | 'b' | null,
+  slot: string,
   syncRunId: number
 }
 
 type UploadOptions = {
   status: SyncStatus,
-  aiSearch: AiSearchNamespace,
+  aiSearch: AiSearchInstance,
   bucket: R2Bucket,
   db: DB,
   type: 'section' | 'file'
@@ -27,14 +27,23 @@ const docsLoaderMap = {
   'section': createSectionDocsLoader,
   'file': createFileDocsLoader,
 }
+
+const itemsLoaderMap = {
+  'section': createSectionItemsLoader,
+  'file': createFileItemsLoader,
+}
+
+
 export function uploadToAISearch(options: UploadOptions) {
-  const slot = options.status.activeSlot === 'b' ? 'a' : 'b'
+  const slot = options.status.slot
   const runId = options.status.syncRunId
-  const instance = options.aiSearch.get(`mdark-file-dev-${slot}`)
+  const instance = options.aiSearch
   const manifestStore = new ManifestStore(options.bucket, slot, options.status.syncRunId)
-  const keyGetter = keyGetterMap[options.type]
   const repo = new SourceWriteRepo(options.db)
+
+  const keyGetter = keyGetterMap[options.type]
   const docsLoader = docsLoaderMap[options.type](repo, runId)
+  const itemsLoader = itemsLoaderMap[options.type](repo, runId)
   return indexer({
     instance,
     docsUploader: {
@@ -43,7 +52,7 @@ export function uploadToAISearch(options: UploadOptions) {
       manifestStore,
       keyGetter,
       docsLoader,
-      repo,
+      itemsLoader,
     }
   })
 }

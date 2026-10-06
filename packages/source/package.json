@@ -9,6 +9,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./schema": "./src/db/schema/index.ts",
     "./markdown": "./src/markdown.ts",
     "./search": "./src/search/index.ts",
     "./builder": "./src/builder/index.ts",
@@ -29,6 +30,7 @@
     "vfile": "^6.0.3",
     "gray-matter": "^4.0.3",
     "zod": "catalog:",
+    "@node-rs/xxhash": "^1.7.8",
     "micromatch": "^4.0.8"
   },
   "devDependencies": {

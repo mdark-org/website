@@ -11,7 +11,7 @@ export const slotManifestSchema = z.object({
 
 export const runManifestSchema = z.object({
   syncRunId: z.number().int().positive(),
-  slot: z.enum(['a', 'b']),
+  slot: z.string(),
   previousSlotRunId: z.number().int().positive().nullable(),
   // 需要写入的 itemKey
   upsert: z.array(z.string()),
@@ -36,7 +36,7 @@ export type RunManifest = z.infer<typeof runManifestSchema>
 export type RunCheckpoint = z.infer<typeof runCheckpointSchema>
 export type IndexPlan = Pick<RunManifest, 'upsert' | 'delete'>
 export class ManifestStore {
-  constructor(private readonly r2: R2Bucket, private slot: 'a' | 'b', private runId: number) {
+  constructor(private readonly r2: R2Bucket, private slot: string, private runId: number) {
 
   }
 

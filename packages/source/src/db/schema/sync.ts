@@ -1,4 +1,4 @@
-import type { Root } from "../../types";
+import type {Folder, Root} from "../../types";
 import {integer, sqliteTable, text, foreignKey, index, uniqueIndex} from "drizzle-orm/sqlite-core";
 
 
@@ -7,12 +7,11 @@ export const syncRun = sqliteTable('sync_runs', {
   baseRunId: integer('base_run_id'),
   datasourceIds: text('datasource_ids', { mode: 'json' }).$type<string[]>().notNull(),
   status: text('status', { enum: ['queued', 'running', 'succeeded', 'failed'] }).notNull(),
-  createdAt: integer('created_at').notNull(),
-  startedAt: integer('started_at'),
-  finishedAt: integer('finished_at'),
+  createdAt: integer('created_at', {mode: 'timestamp'}).notNull().defaultNow(),
+  startedAt: integer('started_at', {mode: 'timestamp'}),
+  finishedAt: integer('finished_at', {mode: 'timestamp'}),
   error: text('error'),
 }, (t) => [
-  foreignKey({ columns: [t.baseRunId], foreignColumns: [t.id] }),
   index('sync_runs_status_created').on(t.status, t.createdAt)
 ])
 
@@ -26,19 +25,17 @@ export const datasource = sqliteTable('datasources', {
   icon: text('icon'),
   mountedPath: text('mounted_path').notNull(),
   sortOrder: integer('sort_order').notNull(),
-  tree: text('tree', { mode: 'json' }).$type<Root>(),
+  tree: text('tree', { mode: 'json' }).$type<Folder>(),
   syncRunId: integer('sync_run_id'),
 }, (t) => [
-  uniqueIndex('datasource_slug_index').on(t.slug),
+  uniqueIndex('datasource_slug_run_index').on(t.slug, t.syncRunId),
 ])
 
-/** One run covers the complete configured datasource set. */
-export type SearchSlotId = 'a' | 'b'
 
 // Current published content run and its matching AI Search slot.
 export const sourceHeads = sqliteTable('source_heads', {
   id: text('id').notNull().primaryKey(),
-  syncRunId: integer('sync_run_id').notNull(),
-  searchSlot: text('search_slot', { enum: ['a', 'b'] }).notNull().default('a'),
-  publishedAt: integer('published_at').notNull(),
+  syncRunId: integer('sync_run_id'),
+  searchSlot: text('search_slot'),
+  publishedAt: integer('published_at', {mode: 'timestamp'}),
 })

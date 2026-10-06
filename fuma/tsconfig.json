@@ -18,13 +18,11 @@
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "types": ["@cloudflare/workers-types"],
     "paths": {
       "@/*": [
         "./src/*"
       ],
-//      "@repo/source": [
-//        "./src/*"
-//      ],
       "*": ["./*"]
     },
     "plugins": [

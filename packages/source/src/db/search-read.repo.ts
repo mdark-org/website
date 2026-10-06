@@ -1,11 +1,11 @@
 import { and, eq, inArray } from 'drizzle-orm'
-import { pageRef, pageRevision, pageSection } from './schema/content'
-import { sourceHeads, type SearchSlotId } from './schema/sync'
-import type { DB } from './schema/index.ts'
+import {datasource, pageContent, pageRef, pageRevision, pageSection} from './schema'
+import { sourceHeads } from './schema'
+import type { DB } from './schema'
 
 export interface PublishedSearch {
-  syncRunId: number
-  slot: SearchSlotId
+  syncRunId: number | null
+  slot: string | null
 }
 
 export interface SearchSectionResult {
@@ -52,4 +52,53 @@ export class SearchReadRepo {
       .where(inArray(pageSection.id, ids))
     return rows
   }
+
+
+  async listSearchSectionKeys(runId: number) {
+    return this.db.select({ sectionId: pageSection.id, revisionId: pageSection.revisionId })
+      .from(pageRef)
+      .innerJoin(pageSection, eq(pageSection.revisionId, pageRef.revisionId))
+      .where(eq(pageRef.syncRunId, runId))
+  }
+
+  async listSearchFiles(runId: number) {
+    return this.db.select({ revisionId: pageRef.revisionId })
+      .from(pageRef)
+      .where(eq(pageRef.syncRunId, runId))
+  }
+
+  async getSearchFiles(runId: number, fileHashes: string[]) {
+    return this.db.select({
+      revisionId: pageRevision.revisionId,
+      headingId: pageRevision.title,
+      headingTitle: pageRevision.title,
+      content: pageContent.markdown,
+      pageTitle: pageRevision.title,
+      url: pageRef.url,
+      tag: datasource.slug,
+    }).from(pageRef)
+      .innerJoin(pageRevision, eq(pageRevision.revisionId, pageRef.revisionId))
+      .innerJoin(pageContent, eq(pageContent.hash, pageRevision.contentHash))
+      .innerJoin(datasource, and(eq(datasource.id, pageRef.datasourceId), eq(datasource.syncRunId, pageRef.syncRunId)))
+      .where(and(eq(pageRef.syncRunId, runId), inArray(pageRevision.revisionId, fileHashes)))
+  }
+
+  async getSearchSections(runId: number, sectionIds: number[]) {
+    return this.db.select({
+      id: pageSection.id,
+      revisionId: pageSection.revisionId,
+      headingId: pageSection.headingId,
+      headingTitle: pageSection.headingTitle,
+      content: pageSection.content,
+      ordinal: pageSection.ordinal,
+      pageTitle: pageRevision.title,
+      url: pageRef.url,
+      tag: datasource.slug,
+    }).from(pageRef)
+      .innerJoin(pageRevision, eq(pageRevision.revisionId, pageRef.revisionId))
+      .innerJoin(pageSection, eq(pageSection.revisionId, pageRef.revisionId))
+      .innerJoin(datasource, and(eq(datasource.id, pageRef.datasourceId), eq(datasource.syncRunId, pageRef.syncRunId)))
+      .where(and(eq(pageRef.syncRunId, runId), inArray(pageSection.id, sectionIds)))
+  }
+
 }

@@ -1,17 +1,16 @@
 import { SearchReadRepo, type PublishedSearch, type SearchSectionResult } from '../../db/search-read.repo'
 export { SearchReadRepo }
 export type { PublishedSearch, SearchSectionResult }
-import type { AiSearchInstance } from '@cloudflare/workers-types'
 
 type SearchParam = {
   query: string,
   tag?: string,
+  slot: string
 }
 
-export async function search(instance: AiSearchInstance, {query, tag}: SearchParam) {
-
+export async function search(ns: AiSearchNamespace, {query, tag, slot}: SearchParam) {
+  const instance = ns.get(slot)
   const filters: {tag: string} | {} = tag ? { tag: tag } : {}
-
   const options = {
     query,
     ai_search_options: {

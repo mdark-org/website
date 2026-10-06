@@ -1,4 +1,4 @@
-import type {SourceWriteRepo} from "../db/write.repo";
+import type {SearchReadRepo} from "../db/search-read.repo";
 
 type SearchFileItem = {
   revisionId: string;
@@ -13,7 +13,7 @@ export const parseRevisionKey = (item: string) => {
 
 export const revisionKey = (file: SearchFileItem) => `page/${file.revisionId}.md`
 
-export type SearchItemInput = Awaited<ReturnType<SourceWriteRepo['getSearchFiles']>>[number]
+export type SearchItemInput = Awaited<ReturnType<SearchReadRepo['getSearchFiles']>>[number]
 
 function createSearchItem(revision: SearchItemInput) {
   return {
@@ -24,9 +24,13 @@ function createSearchItem(revision: SearchItemInput) {
 }
 
 
-export const createFileDocsLoader = (repo: SourceWriteRepo, runId: number) => async (sectionKeys: string[]) => {
+export const createFileDocsLoader = (repo: SearchReadRepo, runId: number) => async (sectionKeys: string[]) => {
   const sectionItems = sectionKeys.map(parseRevisionKey)
   const contents = await repo.getSearchFiles(runId, sectionItems.map(it=>it.pageRevisionId))
   const docs = contents.map(createSearchItem)
   return docs
+}
+
+export const createFileItemsLoader = (repo: SearchReadRepo, runId: number) => () => {
+  return repo.listSearchFiles(runId)
 }

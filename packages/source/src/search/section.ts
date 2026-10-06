@@ -1,5 +1,5 @@
 import { SearchableContent} from './shared/upload'
-import type {SourceWriteRepo} from "../db/write.repo";
+import type {SearchReadRepo} from "../db/search-read.repo";
 
 
 const sectionKeyRegex = /page\/(.+)\/section\/(.+)\.md/
@@ -23,15 +23,18 @@ type Item = {
 
 
 
+export const createSectionItemsLoader = (repo: SearchReadRepo, runId: number) => () => {
+  return repo.listSearchSectionKeys(runId)
+}
 
-export const createSectionDocsLoader = (repo: SourceWriteRepo, runId: number) => async (sectionKeys: string[]) => {
+export const createSectionDocsLoader = (repo: SearchReadRepo, runId: number) => async (sectionKeys: string[]) => {
   const sectionItems = sectionKeys.map(parseSectionKey)
   const contents = await repo.getSearchSections(runId, sectionItems.map(it=>it.pageSectionId))
   const docs = contents.map(createSearchItem)
   return docs
 }
 
-export type SearchItemInput = Awaited<ReturnType<SourceWriteRepo['getSearchSections']>>[number]
+export type SearchItemInput = Awaited<ReturnType<SearchReadRepo['getSearchSections']>>[number]
 
 export function createSearchItem(section: SearchItemInput): SearchableContent {
   const heading = section.headingTitle ? `\n\n## ${section.headingTitle}` : ''

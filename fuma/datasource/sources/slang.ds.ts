@@ -3,6 +3,7 @@ import {type Context} from "../shared.ts";
 
 export default (ctx: Context) => ({
   id: 'btnews_slang',
+  slug: 'slang',
   name: '讲点黑话',
   description: "讲点黑话",
   mountedPath: '/docs/slang',

@@ -1,3 +1,5 @@
+import {defineRelationsPart} from "drizzle-orm/relations";
+
 export * from './content'
 export * from './sync'
 
@@ -8,7 +10,7 @@ import * as content from './content'
 
 export const schema = { ...sync, ...content }
 
-export const relations = defineRelations(schema, (r) => ({
+export const relations = defineRelationsPart(schema, (r) => ({
   sourceHeads: {
     syncRun: r.one.syncRun({
       from: r.sourceHeads.syncRunId,
@@ -88,6 +90,6 @@ export const relations = defineRelations(schema, (r) => ({
   },
 }))
 
-export type DB = ReturnType<typeof drizzle<typeof relations>>
-
-export const createDB = (db: D1Database) => drizzle(db, { relations })
+const _relations = { ...relations }
+export type DB = ReturnType<typeof drizzle<typeof _relations>>
+export const createDB = (db: D1Database) => drizzle(db, { relations: _relations, logger: false })

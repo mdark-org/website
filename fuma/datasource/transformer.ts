@@ -1,12 +1,4 @@
-import type { FolderTransformer, RootTransformer } from "@repo/source/types";
-import * as parser from "any-date-parser";
-const parserAsDate = <T = null>(x: Date|string | undefined | null, fallback: T | null = null): Date | T => {
-  if(typeof x === 'string') {
-    return parser.fromString(x)
-  }
-  if(x === undefined || x === null) return fallback ?? new Date(0) as T
-  return x
-}
+import type { FolderTransformer, RootTransformer } from "@repo/source/builder";
 
 export const indexFolderTransformer: FolderTransformer = {
   beforeBuildTree: (folder) => {
@@ -16,7 +8,7 @@ export const indexFolderTransformer: FolderTransformer = {
       folder.name = `第 ${parseInt(start)} 期 ～ 第 ${parseInt(end)} 期`
     }
   },
-  afterBuildTree: (folder) => {
+  postBuildTree: (folder) => {
     folder.children = folder.children.toReversed()
   }
 }
@@ -36,13 +28,13 @@ export const dateFolderTransformer: FolderTransformer = {
       return
     }
   },
-  afterBuildTree: (folder) => {
+  postBuildTree: (folder) => {
     folder.children = folder.children.toSorted((a, b) => {
       if(a.type ==='folder' || b.type === 'folder') {
         return -1
       }
-      if(a.type === 'page' && b.type == "page") {
-        return parserAsDate(b.data?.date, new Date(0)).getTime() - parserAsDate(a.data?.date, new Date(0)).getTime()
+      if(a.type === 'page' && b.type === "page") {
+        return (b.data?.date?.getTime() ?? 0) - (a.data?.date?.getTime() ?? 0)
       }
       return 0
     })
@@ -55,11 +47,10 @@ export const addRSSPage = (url: string) => ({
     if(root.root) {
       root.children.push({
         type: 'page',
-        title: 'RSS',
+        $id: `${root.$id}:rss`,
         name: 'RSS',
         external: true,
         url: url,
-        children: []
       })
     }
   }

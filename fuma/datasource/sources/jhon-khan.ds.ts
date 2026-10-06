@@ -4,6 +4,7 @@ import {addRSSPage, dateFolderTransformer} from "../transformer.ts";
 export default (ctx: Context) => ({
   id: 'archive_john_khan',
   mountedPath: '/docs/john-khan',
+  slug: 'john-khan',
   category: [],
   name: '小约翰可汗',
   icon: "/image/john-khan.png",

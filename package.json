@@ -2,11 +2,11 @@
   "name": "auto-doc-template",
   "version": "1.0.0",
   "scripts": {
-    "build": "turbo build --filter=fuma"
   },
   "license": "MIT",
   "packageManager": "pnpm@12.5.1",
   "devDependencies": {
+    "cf": "^1.0.0-beta.12",
     "turbo": "^2.11.5",
     "typescript": "^7",
     "@types/node": "^24"

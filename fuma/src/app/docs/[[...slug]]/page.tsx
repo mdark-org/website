@@ -23,7 +23,7 @@ export default async function Page(props: {
   const page = await source.getPageBySlug(['docs',...slugs])
   if (!page) notFound();
   if (page.url !== `/docs/${slugs.join('/')}`) redirect(encodeURI(page.url));
-  const compiled = await renderMarkdown(page.data?.content ?? '', {
+  const compiled = await renderMarkdown(page.content ?? '', {
     ...defaultMdxComponents,
     img: ({ src, alt, ...props }) => typeof src === 'string'
       ? <ImageZoom {...props} src={src} alt={alt ?? ''} width={800} height={400} />
@@ -81,6 +81,7 @@ export async function generateMetadata(props: {
     if (!first) notFound();
     return redirect(encodeURI(first.url));
   }
+
   const [page, datasource] = await Promise.all([
     source.getPageMetaBySlug(['docs', ...slugs]),
     source.getDatasourceBySlug(['docs', ...slugs]),

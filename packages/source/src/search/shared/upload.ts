@@ -20,7 +20,6 @@ export async function uploadSearchBatch({ instance, docs }: {
   const result: BatchResult<RunCheckpoint['upserted'][number]> = { processed: [], failure: null }
   await Promise.allSettled(docs.map((input) => limit(async () => {
     try {
-      // const input = createSearchItem(section)
       const item = await instance.items.upload(input.itemKey, input.content, { metadata: input.metadata })
       result.processed.push({ itemKey: input.itemKey, itemId: item.id })
     } catch (reason) {

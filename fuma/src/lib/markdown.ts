@@ -1,6 +1,8 @@
 import remarkRehype from 'remark-rehype';
 import { rehypeCode } from 'fumadocs-core/mdx-plugins/rehype-code';
 import { toJsxRuntime, type Options } from 'hast-util-to-jsx-runtime';
+import { toHtml, type Options as HTMLOption } from 'hast-util-to-html';
+
 import { Fragment, jsx, jsxs } from 'react/jsx-runtime';
 import { VFile } from 'vfile';
 import { unified } from 'unified'
@@ -22,5 +24,13 @@ export async function renderMarkdown(content: string, components: Options['compo
   return {
     body: toJsxRuntime(tree, { Fragment, jsx, jsxs, components }),
     toc: file.data.toc ?? [],
+  };
+}
+
+export async function renderMarkdownRSS(content: string, options: HTMLOption = {}) {
+  const file = new VFile(content);
+  const tree = await processor.run(processor.parse(file), file);
+  return {
+    body: toHtml(tree, options),
   };
 }

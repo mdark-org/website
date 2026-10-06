@@ -1,18 +1,16 @@
 import type { AiSearchInstance } from '@cloudflare/workers-types'
 import { chunk } from '../../utils/chunk'
 import {uploadSearchBatch, deleteSearchBatch, SearchableContent} from './upload'
-import {completedSlotManifest, IndexPlanInput, prepareIndexPlan} from './plan'
+import {completedSlotManifest, prepareIndexPlan} from './plan'
 import {ManifestStore} from "./manifest";
-import type {SourceWriteRepo} from "../../db/write.repo";
-
 
 export type DocsUploader<T = any> = {
-  repo: SourceWriteRepo,
   manifestStore: ManifestStore,
   runId: number,
-  slot: 'a' | 'b',
-  keyGetter: (item: T) => string
-  docsLoader: (sectionKeys: string[]) => Promise<SearchableContent[]>
+  slot: string,
+  keyGetter: (item: T) => string,
+  itemsLoader: () => Promise<T[]>,
+  docsLoader: (itemKeys: string[]) => Promise<SearchableContent[]>
 }
 
 export async function indexer({ instance, docsUploader }: {

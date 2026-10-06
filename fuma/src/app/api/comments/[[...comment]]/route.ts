@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server'
 import { NextComment } from "@fuma-comment/server/next";
 import { createDrizzleAdapter } from "@fuma-comment/server/adapters/drizzle";
-import {comments, createDB, rates, roles, users} from "@/lib/db/d1/index.ts";
+import {comments, rates, roles, users} from "@/lib/db/d1/index.ts";
 import { createBetterAuthAdapter } from "@fuma-comment/server/adapters/better-auth";
 import { createAuth } from "@/lib/auth";
+import {createDB } from "@/lib/db/db";
 
 
 export const createCommentRoute = () => {

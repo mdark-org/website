@@ -26,7 +26,7 @@ const PageItem: React.FC<PageItemProps> = ({ data, className, ...rest}) => {
       className
     )} {...rest}>
       <div className="text-fd-foreground grow font-medium text-sm shrink-0 ellipsis line-clamp-1 overflow-ellipsis">
-        {data.title}
+        {data.name}
       </div>
       <div className='h-[1px] grow w-full border-t border-t-fd-muted-foreground/70 border-dashed hidden md:block'/>
       <time dateTime={parserAsDate(data.data?.date)?.toISOString()} className="text-xs text-fd-muted-foreground whitespace-nowrap self-end">

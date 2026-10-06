@@ -1,11 +1,10 @@
-/// <reference types="@cloudflare/workers-types" />
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from 'cloudflare:workers'
 import { NonRetryableError } from 'cloudflare:workflows'
-import { getDatasourceSlug, SourceSyncError, SourceWriteRepo, syncDatasource } from '@repo/source/sync'
+import { SourceSyncError, SourceWriteRepo, syncDatasource } from '@repo/source/sync'
 import { datasources } from '../datasource'
 import type { SyncEnv, SyncParams } from './types.ts'
 import { createDB } from '@repo/source'
-import {uploadToAISearch} from "@repo/source/search";
+import {SyncRunRepo} from "@repo/source/sync";
 
 async function stopOnSyncError<T>(operation: () => Promise<T>): Promise<T> {
   try {
@@ -21,53 +20,37 @@ export class SourceSyncWorkflow extends WorkflowEntrypoint<SyncEnv, SyncParams> 
     const runId = event.payload.runId
     const db = createDB(this.env.DB)
     const repo = new SourceWriteRepo(db)
+    const runRepo = new SyncRunRepo(db)
 
-    try {
-      const state = await step.do('start-run', () => stopOnSyncError(async () => {
-        const run = await repo.getRun(runId)
-        const slugs = datasources.map((source) => getDatasourceSlug(source.mountedPath))
-        if (!run || JSON.stringify(run.datasourceIds) !== JSON.stringify(slugs)) {
-          throw new SourceSyncError('The configured datasource set changed after the run was queued.')
-        }
-        if (run.status === 'succeeded') return 'succeeded'
-        if (run.status === 'queued') await repo.startRun(runId)
-        else if (run.status !== 'running') throw new SourceSyncError(`Sync run ${runId} cannot be started.`)
-        return 'running'
-      }))
-      if (state === 'succeeded') return { runId, status: state }
-
-      const results = []
-      for (const [sortOrder, source] of datasources.entries()) {
-        const result = await step.do(`sync-${source.id}`, {
-          retries: { limit: 3, delay: '10 seconds', backoff: 'exponential' },
-          timeout: '30 minutes',
-        }, () => stopOnSyncError(async () => syncDatasource(repo, runId, source, { sortOrder })))
-        results.push(result)
+    const state = await step.do('start-run', () => stopOnSyncError(async () => {
+      const run = await runRepo.getRun(runId)
+      const slugs = datasources.map((source) => source.id)
+      if (!run || JSON.stringify(run.datasourceIds) !== JSON.stringify(slugs)) {
+        throw new SourceSyncError('The configured datasource set changed after the run was queued.')
       }
-
-      const head = await step.do('capture-search-head', () => repo.getHead())
-      const slot = head?.searchSlot === 'a' ? 'b' : 'a'
-      await step.do('index-search-slot', {
-        retries: {
-          limit: 5,
-          backoff: 'constant',
-          delay: '10 seconds',
-        },
-        timeout: '1 hour',
-      }, () => stopOnSyncError(() => uploadToAISearch({
-        aiSearch: this.env.AI_SEARCH,
-        bucket: this.env.SEARCH_MANIFESTS,
-        db: db,
-        type: 'file',
-        status: { syncRunId: runId, activeSlot: head?.searchSlot }
-      })))
-      await step.do('publish-run', () => stopOnSyncError(() => repo.publishRun(runId, slot)))
-      return { runId, status: 'succeeded', pages: results.reduce((count, result) => count + result.pages, 0) }
-    } catch (error) {
-      await step.do('fail-run', async () => {
-        await repo.failRun(runId, error)
-      })
-      throw error
+      if (run.status === 'succeeded') return 'succeeded'
+      if (run.status === 'queued') await runRepo.startRun(runId)
+      else if (run.status !== 'running') throw new SourceSyncError(`Sync run ${runId} cannot be started.`)
+      return 'running'
+    }))
+    if (state === 'succeeded') return { runId, status: state }
+    const results = []
+    for (const [sortOrder, source] of datasources.entries()) {
+      const result = await step.do(`sync-${source.id}`, {
+        retries: { limit: 3, delay: '10 seconds', backoff: 'exponential' },
+        timeout: '30 minutes',
+      }, () => stopOnSyncError(async () => syncDatasource(repo, runId, source, { sortOrder })))
+      results.push(result)
     }
+
+    // 更新
+    // 调用 search workflow
+    await step.do('trigger-index-workflow',async () => {
+      await this.env.INDEX_WORKFLOW.create({
+        id: `index-sync-run-${runId}`,
+        params: { runId }
+      })
+    })
+    return { runId, status: 'succeeded', pages: results.reduce((count, result) => count + result.pages, 0) }
   }
 }

@@ -1,7 +1,6 @@
 import {Hono} from "hono";
 import {search, SearchReadRepo} from "@repo/source/search";
 import {env} from "cloudflare:workers";
-
 export const searchRoute = new Hono()
 searchRoute.get('/search', async (c) => {
   c.header('Cache-Control', 'no-store')
@@ -16,10 +15,9 @@ searchRoute.get('/search', async (c) => {
   if (Array.from(query).length < 2) return c.json([])
   const repo = new SearchReadRepo(c.get('db'))
   const slot = await repo.getPublishedSearch()
-  if(!slot) return c.json([])
-  const instance = env.AI_SEARCH.get(`mdark-file-dev-${slot.slot}`)
-  // @ts-ignore
-  const res = await  search(instance, { query, tag })
+  if(!slot || !slot.syncRunId || !slot.slot) return c.json([])
+
+  const res = await  search(env.AI_SEARCH, { query, slot: slot.slot, tag })
   const results = res.chunks.map(chunk => ({
     id: chunk.id,
     url: chunk.item.metadata!.url as string,

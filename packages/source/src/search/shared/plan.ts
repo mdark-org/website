@@ -1,22 +1,20 @@
 import {IndexPlan, ManifestStore, RunCheckpoint, RunManifest, SlotManifest} from "./manifest";
-import type {SourceWriteRepo} from "../../db/write.repo";
-
 
 export type IndexPlanInput = {
-  repo: SourceWriteRepo
   manifestStore: ManifestStore
+  itemsLoader: <T>() => Promise<T[]>
   runId: number
-  slot: 'a' | 'b',
+  slot: string,
   keyGetter:  (item: any) => string
 }
 
-export async function prepareIndexPlan({ repo, manifestStore, runId, slot, keyGetter }: IndexPlanInput) {
+export async function prepareIndexPlan({ itemsLoader, manifestStore, runId, slot, keyGetter }: IndexPlanInput) {
   let runManifest = await manifestStore.readRunManifest()
   console.log('runManifest', runManifest)
   if (!runManifest) {
     const previous = await manifestStore.readSlotManifest()
     console.log('slotManifest', runManifest)
-    const current = await repo.listSearchSectionKeys(runId)
+    const current = await itemsLoader()
     runManifest = createRunManifest({ runId, slot, previous, current, keyGetter })
     await manifestStore.saveRunManifest(runManifest)
   }
@@ -26,7 +24,7 @@ export async function prepareIndexPlan({ repo, manifestStore, runId, slot, keyGe
 
 export function createRunManifest<T>({ runId, slot, previous, current, keyGetter }: {
   runId: number
-  slot: 'a' | 'b'
+  slot: string
   previous: SlotManifest | null
   current: T[]
   keyGetter: (item: T) => string

@@ -1,23 +1,20 @@
-import { compileMarkdown } from '@content-collections/markdown'
 import { Feed, type FeedOptions } from 'feed'
-import type { DatasourceInfo, Page, ISourceReadRepo } from '@repo/source'
+import type { DatasourceInfo, ISourceReadRepo } from '@repo/source'
 import { config } from '../../../config'
 import { parserAsDate } from '@/lib/date'
-
-// @ts-ignore
-const noCache = async (i, compute) => compute(i)
+import {renderMarkdownRSS} from "@/lib/markdown.ts";
 
 export function generateRssFeed(category: string, feedOption?: Partial<FeedOptions>) {
   const site = config.baseUrl
   return new Feed({
     title: config.feed?.title ?? `${config.title} | RSS Feed`,
-    description: config.feed?.description ?? `${category} RSS feed powered by Auto2Doc`,
+    description: config.feed?.description ?? `${category} RSS feed | mdark.org`,
     id: config.feed?.id ?? site,
     link: config.feed?.link ?? site,
     language: config.feed?.language ?? 'zh-CN',
     image: config.feed?.image ?? `${site}/logo.png`,
     favicon: config.feed?.favicon ?? `${site}/favicon.ico`,
-    copyright: config.feed?.copyright ?? 'Auto2Doc',
+    copyright: config.feed?.copyright,
     ...feedOption,
   })
 }
@@ -35,15 +32,6 @@ function datasourceFeed(info: DatasourceInfo, baseUrl: string) {
   })
 }
 
-const compilePage = (p: Page) =>
-  compileMarkdown(
-    { cache: noCache },
-    {
-      _meta: { filePath: '', fileName: '', directory: '', path: '', extension: 'md' },
-      content: p.data?.content ?? '',
-    },
-  )
-
 export async function collectRssItems(reader: ISourceReadRepo, info: DatasourceInfo, baseUrl: string, limit = 30) {
   const items = await reader.listPages({ datasourceId: info.id, rss: true, limit }, { content: true })
   return Promise.all(
@@ -53,14 +41,15 @@ export async function collectRssItems(reader: ISourceReadRepo, info: DatasourceI
       title: p.data!.title,
       description: p.data!.description ?? '',
       link: `${baseUrl}${p.url}`,
-      content: await compilePage(p),
+      content: (await renderMarkdownRSS(p.content!)).body,
     })),
   )
 }
 
 export async function buildDatasourceFeed(reader: ISourceReadRepo, info: DatasourceInfo, baseUrl: string) {
   const feed = datasourceFeed(info, baseUrl)
-  ;(await collectRssItems(reader, info, baseUrl, 30)).forEach((it) => feed.addItem(it))
+  const rssItems = await collectRssItems(reader, info, baseUrl, 30)
+  rssItems.forEach((it) => feed.addItem(it))
   return feed
 }
 

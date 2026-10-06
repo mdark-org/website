@@ -4,6 +4,7 @@ import type {Context} from "../shared.ts";
 
 export default (ctx: Context) => ({
   id: 'btnews_btnews',
+  slug: 'btnews',
   name: '睡前消息',
   description: "热河省蛮子，刘亦菲粉丝",
   mountedPath: '/docs/btnews',
