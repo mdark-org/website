@@ -1,13 +1,6 @@
 
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
-
-export type Metadata = {
-  bvid?: string,
-  ytid?: string,
-  wbid?: string,
-  xgid?: string,
-  rss?: boolean,
-}
+import {Metadata} from "../../types";
 
 
 /** Exact Markdown bytes are shared across page versions and runs. */

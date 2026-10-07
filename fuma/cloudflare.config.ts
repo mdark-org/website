@@ -3,12 +3,17 @@ import { createWorkersResponseStoreServiceBindingConfig } from "@vinext/cloudfla
 
 // binding
 
-const name = 'mdark-dev';
+console.log('build in env:', process.env.NODE_ENV);
 
-const devDBId = '8e3e8697-7153-472c-97b5-9e7c1ef352c2'
-const productionDBId = 'b1f902ea-c16a-4850-b8a8-f93476167bec'
+const isProd = process.env.NODE_ENV === "production";
+const nodeEnv = process.env.NODE_ENV;
+
+const dbId = isProd ? undefined : '8e3e8697-7153-472c-97b5-9e7c1ef352c2'
+const name = isProd ? 'mdark' : 'mdark-dev';
+
+
 const db = {
-  DB: bindings.d1({ name ,id: devDBId }),
+  DB: bindings.d1({ name, id: dbId }),
 }
 
 
@@ -36,7 +41,6 @@ const workflowExport = {
   SourceSyncWorkflow: workerExports.workflow({ name: `${name}-sync` }),
   IndexWorkflow:workerExports.workflow({ name: `${name}-search-indexer` }),
 }
-
 
 // workers
 const responseStore = await createWorkersResponseStoreServiceBindingConfig({
@@ -68,16 +72,16 @@ export const syncWorker = defineWorker({
     ...bucket,
     ...workflows,
     ALGOLIA_APP_ID: bindings.secret(),
-    ALGOLIA_API_KEY: bindings.secret(),
+    NODE_ENV: bindings.text(nodeEnv),
+    ALGOLIA_SECRET_API_KEY: bindings.secret(),
     SYNC_TOKEN: bindings.secret(),
     GITHUB_TOKEN: bindings.secret(),
-    BASE_URL: bindings.secret(),
   },
 });
 
 export default defineConfig(({mode, isPreview}) => ({
   worker: defineWorker({
-    // domains: !isPreview ? [mode === 'production' ? 'preview.mdark.org':'preview.mdark.org'] : undefined,
+    domains: [isProd ? 'prod.mdark.org' : 'preview.mdark.org'],
     ...responseStore.applicationWorker,
     name: name,
     entrypoint: "vinext/server/fetch-handler",
@@ -96,16 +100,17 @@ export default defineConfig(({mode, isPreview}) => ({
       ...db,
       ...responseStore.applicationWorker.env,
       ASSETS: bindings.assets(),
+      NODE_ENV: bindings.text(nodeEnv),
       IMAGES: bindings.images(),
       SYNC_TOKEN: bindings.secret(),
       GITHUB_TOKEN: bindings.secret(),
       BETTER_AUTH_SECRET: bindings.secret(),
       NEXT_PUBLIC_GAID: bindings.text(`G-ZJPDQWZKDS`),
-      BASE_URL: bindings.text(mode === 'production'? 'https://mdark.org':`http://localhost:3000`),
+      BASE_URL: bindings.text(isProd ? `https://mdark.org`: mode === 'production'? 'https://preview.mdark.org':`http://localhost:3000`),
       GOOGLE_CLIENT_ID: bindings.secret(),
       GOOGLE_CLIENT_SECRET: bindings.secret(),
       ALGOLIA_APP_ID: bindings.secret(),
-      ALGOLIA_SEARCH_API_KEY: bindings.secret(),
+      ALGOLIA_SECRET_API_KEY: bindings.secret(),
     },
   }),
 }));

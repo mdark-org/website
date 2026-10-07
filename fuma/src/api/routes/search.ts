@@ -47,7 +47,7 @@ searchRoute.get('/search/algolia', async (c) => {
     return c.json({error: 'invalid_query'}, 400)
   }
   if (Array.from(query).length < 2) return c.json([])
-  if (!env.ALGOLIA_APP_ID || !env.ALGOLIA_SEARCH_API_KEY) {
+  if (!env.ALGOLIA_APP_ID || !env.ALGOLIA_SECRET_API_KEY) {
     return c.json({error: 'algolia_search_not_configured'}, 503)
   }
 
@@ -56,7 +56,7 @@ searchRoute.get('/search/algolia', async (c) => {
     if (!published?.syncRunId || !published.searchSlot) return c.json([])
 
     const searchClient = algoliaClient({
-      client: liteClient(env.ALGOLIA_APP_ID, env.ALGOLIA_SEARCH_API_KEY),
+      client: liteClient(env.ALGOLIA_APP_ID, env.ALGOLIA_SECRET_API_KEY),
       indexName: published.searchSlot,
       tag,
     })

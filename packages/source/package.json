@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Content database (Cloudflare D1 via drizzle-orm): schema, read API for the app, and the sync that writes it. Migrations are generated in `fuma` (fuma/drizzle.d1.config.ts).",
+  "description": "sync and index content",
   "scripts": {
     "typecheck": "tsc"
   },

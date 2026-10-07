@@ -8,15 +8,15 @@ export class IndexWorkflow extends WorkflowEntrypoint<SyncEnv, SyncParams> {
     const runId = event.payload.runId;
     const db = createDB(this.env.DB)
     const runRepo = new SyncRunRepo(db)
-
+    const nodeEnv = this.env.NODE_ENV
     const slot = await step.do('get-search-slot', async () => {
       const head = await runRepo.getHead()
-      return head?.searchSlot === 'mdark-algolia-dev-a' ? 'mdark-algolia-dev-b' : 'mdark-algolia-dev-a'
+      return head?.searchSlot === `mdark-algolia-${nodeEnv}-a` ? `mdark-algolia-${nodeEnv}-b` : `mdark-algolia-${nodeEnv}-a`
     })
 
     const adapter = new AlgoliaV2SearchAdapter({
       appId: this.env.ALGOLIA_APP_ID,
-      apiKey: this.env.ALGOLIA_API_KEY,
+      apiKey: this.env.ALGOLIA_SECRET_API_KEY,
       indexName: slot,
       repo: new SearchReadRepo(db),
       runId,

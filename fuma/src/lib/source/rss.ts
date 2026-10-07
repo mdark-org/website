@@ -49,6 +49,7 @@ export async function collectRssItems(reader: ISourceReadRepo, info: DatasourceI
 export async function buildDatasourceFeed(reader: ISourceReadRepo, info: DatasourceInfo, baseUrl: string) {
   const feed = datasourceFeed(info, baseUrl)
   const rssItems = await collectRssItems(reader, info, baseUrl, 30)
+  // @ts-ignore
   rssItems.forEach((it) => feed.addItem(it))
   return feed
 }
@@ -58,6 +59,7 @@ export async function buildSiteFeed(reader: ISourceReadRepo, baseUrl: string) {
   const datasources = await reader.listDatasource()
   const items = (await Promise.all(datasources.map((d) => collectRssItems(reader, d, baseUrl, 30)))).flat()
   items.sort((a, b) => b.date.getTime() - a.date.getTime())
+  // @ts-ignore
   items.forEach((it) => feed.addItem(it))
   return feed
 }

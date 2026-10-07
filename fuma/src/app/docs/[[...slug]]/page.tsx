@@ -110,7 +110,7 @@ export async function generateMetadata(props: {
     description: page.data.description,
     icons: icons,
     keywords: [
-      page.data.title,
+      page.name,
       ...(page.data.tags ?? []),
       ...(datasource?.name ? [datasource.name] : []),
       'MDARK',

@@ -41,3 +41,5 @@ tmp
 .wrangler
 wrangler.jsonc
 .secret
+.secret.*
+.env.*

@@ -3,14 +3,13 @@ import {defineRelationsPart} from "drizzle-orm/relations";
 export * from './content'
 export * from './sync'
 
-import { defineRelations } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
 import * as sync from './sync'
 import * as content from './content'
 
 export const schema = { ...sync, ...content }
 
-export const relations = defineRelationsPart(schema, (r) => ({
+export const relationPart = defineRelationsPart(schema, (r) => ({
   sourceHeads: {
     syncRun: r.one.syncRun({
       from: r.sourceHeads.syncRunId,
@@ -90,6 +89,5 @@ export const relations = defineRelationsPart(schema, (r) => ({
   },
 }))
 
-const _relations = { ...relations }
-export type DB = ReturnType<typeof drizzle<typeof _relations>>
-export const createDB = (db: D1Database) => drizzle(db, { relations: _relations, logger: false })
+export const relations = { ...relationPart }
+export type DB = ReturnType<typeof drizzle<typeof relations>>

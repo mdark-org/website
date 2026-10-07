@@ -21,7 +21,7 @@ const metaPreprocess = (x: any) => {
 export const metaSchema = z.preprocess(metaPreprocess, z.object({
   rss: z.coerce.boolean().optional(),
   date: z.coerce.date().optional(),
-  title: z.coerce.string(),
+  title: z.coerce.string().optional(),
   description: z.coerce.string().optional(),
   tags: z.string().array().optional(),
   bvid: z.coerce.string().optional(),

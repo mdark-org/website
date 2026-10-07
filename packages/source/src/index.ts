@@ -1,4 +1,5 @@
 export * from './db/schema'
+export * from './db'
 export * from './types'
 export * from './db/read.repo'
 export * from './sync'
