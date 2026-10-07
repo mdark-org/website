@@ -1,6 +1,6 @@
 import { source } from "@/lib/source";
 import type { Metadata } from "next";
-import { DocsPage, DocsDescription, DocsTitle, DocsBody } from 'fumadocs-ui/layouts/docs/page';
+import { DocsPage, DocsDescription, DocsTitle, DocsBody, MarkdownCopyButton, ViewOptionsPopover } from 'fumadocs-ui/layouts/docs/page';
 import { notFound, redirect } from 'next/navigation'
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import Video from '@/app/docs/[[...slug]]/video'
@@ -43,6 +43,10 @@ export default async function Page(props: {
     >
       <DocsTitle>{page.data!.title}</DocsTitle>
       <DocsDescription>{page.data!.description}</DocsDescription>
+      <div className="flex flex-wrap items-center gap-2 border-b pb-6">
+        <MarkdownCopyButton markdownUrl={encodeURI(`/llms.mdx${page.url}`)} />
+        <ViewOptionsPopover markdownUrl={encodeURI(`/llms.mdx${page.url}`)} />
+      </div>
       <DocsBody>
         { (page.data!.bvid || page.data!.ytid || page.data!.wbid || page.data!.xgid) &&
           <Video
