@@ -33,7 +33,7 @@ const itemsLoaderMap = {
   'file': createFileItemsLoader,
 }
 
-
+export {uploadToAISearchV2} from './v2/index'
 export function uploadToAISearch(options: UploadOptions) {
   const slot = options.status.slot
   const runId = options.status.syncRunId
