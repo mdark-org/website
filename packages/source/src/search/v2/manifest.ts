@@ -1,82 +1,107 @@
-import type { R2Bucket } from '@cloudflare/workers-types'
 import { z } from 'zod'
-export const slotManifestV2Schema = z.object({
-  syncRunId: z.number().int().positive(),
-  // itemId, itemKey
-  items: z.array(z.object({
-    itemIds: z.string().array(),
-    itemKey: z.string()
-  })),
-})
 
-export const runManifestV2Schema = z.object({
-  syncRunId: z.number().int().positive(),
-  slot: z.string(),
-  previousSlotRunId: z.number().int().positive().nullable(),
-  // 需要写入的 itemKey
-  upsert: z.array(z.string()),
-  // 需要移除的 itemId
-  delete: z.array(z.object({
-    itemKey: z.string(),
-    itemIds: z.string().array(),
-  })),
-})
+export type ItemMetadata = {
+  itemKey: string
+}
 
-export const runCheckpointV2Schema = z.object({
-  upserted: z.array(z.object({
-    itemKey: z.string(),
-    itemIds: z.string().array(),
-  })),
-  // itemId
-  removed: z.array(z.string()),
-})
+export type SlotManifestV2<TMetadata extends ItemMetadata = ItemMetadata> = {
+  syncRunId: number
+  items: TMetadata[]
+}
 
-export type SlotManifestV2 = z.infer<typeof slotManifestV2Schema>
-export type RunManifestV2 = z.infer<typeof runManifestV2Schema>
-export type RunCheckpointV2 = z.infer<typeof runCheckpointV2Schema>
-export type IndexPlanV2 = Pick<RunManifestV2, 'upsert' | 'delete'>
-export class ManifestStoreV2 {
-  constructor(private readonly r2: R2Bucket, private slot: string, private runId: number) {
+export type RunManifestV2<TMetadata extends ItemMetadata = ItemMetadata> = {
+  syncRunId: number
+  slot: string
+  previousSlotRunId: number | null
+  upsert: string[]
+  delete: TMetadata[]
+}
 
+export type RunCheckpointV2<TMetadata extends ItemMetadata = ItemMetadata> = {
+  removed: string[]
+  upserted: TMetadata[]
+}
+
+export type IndexPlanV2<TMetadata extends ItemMetadata = ItemMetadata> = Pick<RunManifestV2<TMetadata>, 'upsert' | 'delete'>
+
+export type ManifestBucket = {
+  get(key: string): Promise<{ json(): Promise<unknown> } | null>
+  put(key: string, value: string, options: { httpMetadata: { contentType: string } }): Promise<unknown>
+}
+
+function createManifestSchemas<TMetadata extends ItemMetadata>(itemMetadataSchema: z.ZodType<TMetadata>) {
+  return {
+    slotManifest: z.object({
+      syncRunId: z.number().int().positive(),
+      items: z.array(itemMetadataSchema),
+    }),
+    runManifest: z.object({
+      syncRunId: z.number().int().positive(),
+      slot: z.string(),
+      previousSlotRunId: z.number().int().positive().nullable(),
+      upsert: z.array(z.string()),
+      delete: z.array(itemMetadataSchema),
+    }),
+    checkpoint: z.object({
+      upserted: z.array(itemMetadataSchema),
+      removed: z.array(z.string()),
+    }),
+  }
+}
+
+const defaultManifestSchemas = createManifestSchemas(z.object({ itemKey: z.string() }).catchall(z.unknown()))
+
+export const slotManifestV2Schema = defaultManifestSchemas.slotManifest
+export const runManifestV2Schema = defaultManifestSchemas.runManifest
+export const runCheckpointV2Schema = defaultManifestSchemas.checkpoint
+
+export class ManifestStoreV2<TMetadata extends ItemMetadata> {
+  private readonly schemas
+
+  constructor(
+    private readonly r2: ManifestBucket,
+    private readonly slot: string,
+    private readonly runId: number,
+    itemMetadataSchema: z.ZodType<TMetadata>,
+  ) {
+    this.schemas = createManifestSchemas(itemMetadataSchema)
   }
 
-  async readSlotManifest() {
+  async readSlotManifest(): Promise<SlotManifestV2<TMetadata> | null> {
     const object = await this.r2.get(`search/v2/manifests/${this.slot}.json`)
     if (!object) return null
-    const body = await object.json<unknown>()
-    return slotManifestV2Schema.parse(body)
+    return this.schemas.slotManifest.parse(await object.json())
   }
 
-  async readRunManifest() {
+  async readRunManifest(): Promise<RunManifestV2<TMetadata> | null> {
     const object = await this.r2.get(`search/v2/builds/${this.runId}/${this.slot}/manifest.json`)
     if (!object) return null
-    const body = await object.json<unknown>()
-    return runManifestV2Schema.parse(body)
+    return this.schemas.runManifest.parse(await object.json())
   }
 
-  async saveRunManifest(content: RunManifestV2) {
+  async saveRunManifest(content: RunManifestV2<TMetadata>) {
     await this.r2.put(`search/v2/builds/${this.runId}/${this.slot}/manifest.json`, JSON.stringify(content), {
       httpMetadata: { contentType: 'application/json' },
     })
   }
 
-  async saveManifest(content: SlotManifestV2) {
-    await this.r2.put(`search/v2/manifests/v2/${this.slot}.json`, JSON.stringify(content), {
+  async saveManifest(content: SlotManifestV2<TMetadata>) {
+    await this.r2.put(`search/v2/manifests/${this.slot}.json`, JSON.stringify(content), {
       httpMetadata: { contentType: 'application/json' },
     })
   }
 
-  async saveCheckpoint(content: RunCheckpointV2) {
+  async saveCheckpoint(content: RunCheckpointV2<TMetadata>) {
     const key = `search/v2/builds/${this.runId}/${this.slot}/checkpoint.json`
     await this.r2.put(key, JSON.stringify(content), {
       httpMetadata: { contentType: 'application/json' },
     })
   }
 
-  async readCheckpoint() {
+  async readCheckpoint(): Promise<RunCheckpointV2<TMetadata> | null> {
     const key = `search/v2/builds/${this.runId}/${this.slot}/checkpoint.json`
     const object = await this.r2.get(key)
-    if (object) return runCheckpointV2Schema.parse(await object.json<unknown>())
+    if (object) return this.schemas.checkpoint.parse(await object.json())
     return null
   }
 }

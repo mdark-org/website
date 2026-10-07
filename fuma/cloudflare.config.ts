@@ -67,6 +67,8 @@ export const syncWorker = defineWorker({
     ...ai,
     ...bucket,
     ...workflows,
+    ALGOLIA_APP_ID: bindings.secret(),
+    ALGOLIA_API_KEY: bindings.secret(),
     SYNC_TOKEN: bindings.secret(),
     GITHUB_TOKEN: bindings.secret(),
     BASE_URL: bindings.secret(),
@@ -102,6 +104,8 @@ export default defineConfig(({mode, isPreview}) => ({
       BASE_URL: bindings.text(mode === 'production'? 'https://mdark.org':`http://localhost:3000`),
       GOOGLE_CLIENT_ID: bindings.secret(),
       GOOGLE_CLIENT_SECRET: bindings.secret(),
+      ALGOLIA_APP_ID: bindings.secret(),
+      ALGOLIA_SEARCH_API_KEY: bindings.secret(),
     },
   }),
 }));

@@ -16,6 +16,8 @@ declare global {
       BASE_URL: string
       GOOGLE_CLIENT_ID: string
       GOOGLE_CLIENT_SECRET: string
+      ALGOLIA_APP_ID: string
+      ALGOLIA_SEARCH_API_KEY: string
     }
   }
 }

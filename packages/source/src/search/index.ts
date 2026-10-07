@@ -1,58 +1,31 @@
-import {AiSearchInstance, AiSearchNamespace, R2Bucket} from "@cloudflare/workers-types";
-import {ManifestStore} from "./shared/manifest";
-import {indexer} from "./shared/indexer";
-import {DB} from "../db/schema";
-import {createFileDocsLoader, createFileItemsLoader, revisionKey} from "./file";
-import {createSectionDocsLoader, createSectionItemsLoader, sectionKey} from "./section";
-import {SearchReadRepo} from "../db/search-read.repo";
-export * from './shared/search'
+
+import type { R2Bucket } from '@cloudflare/workers-types'
+import type { SearchAdapter } from './v2/adapter'
+import { indexer } from './v2/indexer'
+import { ManifestStoreV2, type ItemMetadata } from './v2/manifest'
+export * from './v2/search'
+export { AISearchAdapter } from './adapters/ai-search-file'
+export { AlgoliaSearchAdapter, type AlgoliaSearchAdapterOptions } from './adapters/algo'
+export { AlgoliaV2SearchAdapter, type AlgoliaV2SearchAdapterOptions } from './adapters/algolia-v2'
+
 type SyncStatus = {
-  slot: string,
+  slot: string
   syncRunId: number
 }
 
-type UploadOptions = {
-  status: SyncStatus,
-  aiSearch: AiSearchInstance,
-  bucket: R2Bucket,
-  db: DB,
-  type: 'section' | 'file'
+export type UploadOptionsV2<TSource, TContent, TMetadata extends ItemMetadata> = {
+  status: SyncStatus
+  bucket: R2Bucket
+  searchAdapter: SearchAdapter<TSource, TContent, TMetadata>
 }
 
-const keyGetterMap = {
-  'section': sectionKey,
-  'file': revisionKey,
-}
-const docsLoaderMap = {
-  'section': createSectionDocsLoader,
-  'file': createFileDocsLoader,
-}
-
-const itemsLoaderMap = {
-  'section': createSectionItemsLoader,
-  'file': createFileItemsLoader,
-}
-
-export {uploadToAISearchV2} from './v2/index'
-export function uploadToAISearch(options: UploadOptions) {
-  const slot = options.status.slot
-  const runId = options.status.syncRunId
-  const instance = options.aiSearch
-  const manifestStore = new ManifestStore(options.bucket, slot, options.status.syncRunId)
-  const repo = new SearchReadRepo(options.db)
-
-  const keyGetter = keyGetterMap[options.type]
-  const docsLoader = docsLoaderMap[options.type](repo, runId)
-  const itemsLoader = itemsLoaderMap[options.type](repo, runId)
+export function uploadToAISearchV2<TSource, TContent, TMetadata extends ItemMetadata>(
+  options: UploadOptionsV2<TSource, TContent, TMetadata>,
+) {
   return indexer({
-    instance,
-    docsUploader: {
-      runId,
-      slot,
-      manifestStore,
-      keyGetter,
-      docsLoader,
-      itemsLoader,
-    }
+    searchAdapter: options.searchAdapter,
+    manifestStore: new ManifestStoreV2(options.bucket, options.status.slot, options.status.syncRunId, options.searchAdapter.itemMetadataSchema),
+    runId: options.status.syncRunId,
+    slot: options.status.slot,
   })
 }

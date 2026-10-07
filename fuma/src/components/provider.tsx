@@ -1,11 +1,11 @@
 
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { ReactNode } from 'react';
-import DocsSearchDialog from './search-dialog';
+import AlgoliaDocsSearchDialog from './algolia-search-dialog';
 
 export function Provider({ children }: { children: ReactNode }) {
   return (
-    <RootProvider search={{ SearchDialog: DocsSearchDialog }}>
+    <RootProvider search={{ SearchDialog: AlgoliaDocsSearchDialog }}>
       {children}
     </RootProvider>
   );

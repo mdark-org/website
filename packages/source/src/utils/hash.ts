@@ -1,4 +1,4 @@
-import {xxh64} from "@node-rs/xxhash";
+import XXH from 'xxhashjs'
 
 export async function hash(value: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
@@ -6,5 +6,5 @@ export async function hash(value: string): Promise<string> {
 }
 
 export function quickHash(value: string): string {
-  return xxh64(value).toString(16).padEnd(16, '0')
+  return XXH.h64(new TextEncoder().encode(value).buffer, 0).toString(16).padEnd(16, '0')
 }

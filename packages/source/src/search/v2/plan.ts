@@ -1,14 +1,14 @@
-import {IndexPlanV2, ManifestStoreV2, RunCheckpointV2, RunManifestV2, SlotManifestV2} from "./manifest";
+import {IndexPlanV2, ItemMetadata, ManifestStoreV2, RunCheckpointV2, RunManifestV2, SlotManifestV2} from "./manifest";
 
-export type IndexPlanInput = {
-  manifestStore: ManifestStoreV2
-  itemsLoader: <T>() => Promise<T[]>
+export type IndexPlanInput<TSource, TMetadata extends ItemMetadata> = {
+  manifestStore: ManifestStoreV2<TMetadata>
+  itemsLoader: () => Promise<TSource[]>
   runId: number
   slot: string,
-  keyGetter:  (item: any) => string
+  keyGetter: (item: TSource) => string
 }
 
-export async function prepareIndexPlan({ itemsLoader, manifestStore, runId, slot, keyGetter }: IndexPlanInput) {
+export async function prepareIndexPlan<TSource, TMetadata extends ItemMetadata>({ itemsLoader, manifestStore, runId, slot, keyGetter }: IndexPlanInput<TSource, TMetadata>) {
   let runManifest = await manifestStore.readRunManifest()
   console.log('runManifest', runManifest)
   if (!runManifest) {
@@ -22,13 +22,13 @@ export async function prepareIndexPlan({ itemsLoader, manifestStore, runId, slot
   return { plan: remainingPlan(runManifest, checkpoint), checkpoint }
 }
 
-export function createRunManifest<T>({ runId, slot, previous, current, keyGetter }: {
+export function createRunManifest<TSource, TMetadata extends ItemMetadata = ItemMetadata>({ runId, slot, previous, current, keyGetter }: {
   runId: number
   slot: string
-  previous: SlotManifestV2 | null
-  current: T[]
-  keyGetter: (item: T) => string
-}): RunManifestV2 {
+  previous: SlotManifestV2<TMetadata> | null
+  current: TSource[]
+  keyGetter: (item: TSource) => string
+}): RunManifestV2<TMetadata> {
   const previousItems = previous?.items ?? []
   // 期望的所有 SectionItemKey
   const expectedItemKey = new Set(current.map((file) => (keyGetter(file))))
@@ -47,8 +47,8 @@ export function createRunManifest<T>({ runId, slot, previous, current, keyGetter
 }
 
 
-export function remainingPlan(plan: IndexPlanV2, checkpoint: RunCheckpointV2): IndexPlanV2 {
-  const upserted = new Set(checkpoint.upserted.map((item) => item.itemKey))
+export function remainingPlan<T extends ItemMetadata= ItemMetadata>(plan: IndexPlanV2<T>, checkpoint: RunCheckpointV2<T>): IndexPlanV2<T> {
+  const upserted = new Set(checkpoint.upserted.map(it => it.itemKey))
   const removed = new Set(checkpoint.removed)
   return {
     upsert: plan.upsert.filter((item) => !upserted.has(item)),
@@ -56,7 +56,7 @@ export function remainingPlan(plan: IndexPlanV2, checkpoint: RunCheckpointV2): I
   }
 }
 
-export function completedSlotManifest(runId: number, previous: SlotManifestV2 | null, checkpoint: RunCheckpointV2): SlotManifestV2 {
+export function completedSlotManifest<T extends ItemMetadata= ItemMetadata>(runId: number, previous: SlotManifestV2<T> | null, checkpoint: RunCheckpointV2<T>): SlotManifestV2<T> {
   const removed = new Set(checkpoint.removed)
   const keep = (previous?.items ?? []).filter(({itemKey}) => !removed.has(itemKey))
   const upserted = checkpoint.upserted

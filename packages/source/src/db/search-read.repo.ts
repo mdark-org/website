@@ -2,6 +2,7 @@ import { and, eq, inArray } from 'drizzle-orm'
 import {datasource, pageContent, pageRef, pageRevision, pageSection} from './schema'
 import { sourceHeads } from './schema'
 import type { DB } from './schema'
+import { chunkD1Columns } from '../utils/chunk'
 
 export interface PublishedSearch {
   syncRunId: number | null
@@ -68,19 +69,24 @@ export class SearchReadRepo {
   }
 
   async getSearchFiles(runId: number, fileHashes: string[]) {
-    return this.db.select({
-      revisionId: pageRevision.revisionId,
-      headingId: pageRevision.title,
-      headingTitle: pageRevision.title,
-      content: pageContent.markdown,
-      pageTitle: pageRevision.title,
-      url: pageRef.url,
-      tag: datasource.slug,
-    }).from(pageRef)
-      .innerJoin(pageRevision, eq(pageRevision.revisionId, pageRef.revisionId))
-      .innerJoin(pageContent, eq(pageContent.hash, pageRevision.contentHash))
-      .innerJoin(datasource, and(eq(datasource.id, pageRef.datasourceId), eq(datasource.syncRunId, pageRef.syncRunId)))
-      .where(and(eq(pageRef.syncRunId, runId), inArray(pageRevision.revisionId, fileHashes)))
+    const groups = chunkD1Columns([...new Set(fileHashes)], 1)
+    const rows = await Promise.all(groups.map((group) => {
+      return this.db.select({
+        revisionId: pageRevision.revisionId,
+        headingId: pageRevision.title,
+        headingTitle: pageRevision.title,
+        content: pageContent.markdown,
+        pageTitle: pageRevision.title,
+        description: pageRevision.description,
+        url: pageRef.url,
+        tag: datasource.slug,
+      }).from(pageRef)
+        .innerJoin(pageRevision, eq(pageRevision.revisionId, pageRef.revisionId))
+        .innerJoin(pageContent, eq(pageContent.hash, pageRevision.contentHash))
+        .innerJoin(datasource, and(eq(datasource.id, pageRef.datasourceId), eq(datasource.syncRunId, pageRef.syncRunId)))
+        .where(and(eq(pageRef.syncRunId, runId), inArray(pageRevision.revisionId, group)))
+    }))
+    return rows.flat()
   }
 
   async getSearchSections(runId: number, sectionIds: number[]) {
