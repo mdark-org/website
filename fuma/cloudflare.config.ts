@@ -3,11 +3,11 @@ import { createWorkersResponseStoreServiceBindingConfig } from "@vinext/cloudfla
 
 // binding
 
-console.log('build in env:', process.env.NODE_ENV);
 
-const isProd = process.env.NODE_ENV === "production";
-const nodeEnv = process.env.NODE_ENV;
+const isProd = process.env.MY_NODE_ENV === "production";
+const nodeEnv = process.env.MY_NODE_ENV as string;
 
+console.log('build in env:', nodeEnv);
 const dbId = isProd ? undefined : '8e3e8697-7153-472c-97b5-9e7c1ef352c2'
 const name = isProd ? 'mdark' : 'mdark-dev';
 
@@ -81,7 +81,7 @@ export const syncWorker = defineWorker({
 
 export default defineConfig(({mode, isPreview}) => ({
   worker: defineWorker({
-    domains: [isProd ? 'prod.mdark.org' : 'preview.mdark.org'],
+    domains: isProd ? ['prod.mdark.org', 'mdark.org'] : ['preview.mdark.org'],
     ...responseStore.applicationWorker,
     name: name,
     entrypoint: "vinext/server/fetch-handler",

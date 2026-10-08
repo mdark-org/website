@@ -1,7 +1,7 @@
 import type { SearchClient } from 'fumadocs-core/search/client'
 import { z } from 'zod'
 
-const results = z.array(z.object({
+export const searchResults = z.array(z.object({
   id: z.string(),
   url: z.string(),
   type: z.enum(['page', 'heading', 'text']),
@@ -29,13 +29,12 @@ export function createAlgoliaSearchClient({ tag, enabled = true, fetcher = fetch
       if (tag) params.set('tag', tag)
       const response = await fetcher(`/api/search/algolia?${params}`, {
         signal: current.signal,
-        cache: 'no-store',
       })
       current.signal.throwIfAborted()
       if (!response.ok) throw new Error(`Algolia search request failed (${response.status}).`)
       const data: unknown = await response.json()
       current.signal.throwIfAborted()
-      return results.parse(data)
+      return searchResults.parse(data)
     },
   }
 }

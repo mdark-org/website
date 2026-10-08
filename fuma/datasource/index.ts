@@ -21,3 +21,8 @@ export const datasources = [
   koalaOssDs(ctx),
   jhonKhanDs(ctx)
 ] as Datasource[]
+
+export const devDatasource = [
+  opinionDs(ctx),
+  slangDs(ctx),
+] as Datasource[]

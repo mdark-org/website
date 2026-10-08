@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build:post": "node scripts/post-build.ts",
-    "build:next": "next build",
-    "build": "pnpm build:next && pnpm build:post",
     "typecheck": "tsc",
     "start": "next start",
     "standalone": "node .next/standalone/fuma/server.js",
@@ -13,12 +10,12 @@
     "d1:migrate:local": "cf d1 migrations apply 8e3e8697-7153-472c-97b5-9e7c1ef352c2 --local --dir drizzle/d1",
     "d1:migrate:dev": "cf d1 migrations apply 8e3e8697-7153-472c-97b5-9e7c1ef352c2 --dir drizzle/d1",
     "d1:migrate:prod": "cf d1 migrations apply b064e2bf-7210-41dd-90f1-be5b4bf8b864 --dir drizzle/d1",
-    "dev:vinext": "vite dev",
-    "deploy:vinextx": "NODE_ENV=development vinext-cloudflare deploy",
-    "deploy:vinext": "NODE_ENV=production vinext-cloudflare deploy",
+    "dev:vinext": "MY_NODE_ENV=development vp dev",
     "start:vinext": "vite preview",
-    "deploy:production": "NODE_ENV=production vinext-cloudflare deploy && NODE_ENV=production cf deploy --prebuilt --secrets-file .secret.production --worker mdark-sync && NODE_ENV=production cf deploy --prebuilt --worker mdark-response-store",
-    "deploy:development": "MY_NODE_ENV=development vinext-cloudflare deploy && NODE_ENV=development cf deploy --prebuilt --secrets-file .secret.development --worker mdark-dev-sync && NODE_ENV=development cf deploy --prebuilt --worker mdark-dev-response-store"
+    "deploy:vinext:dev": "MY_NODE_ENV=development vinext-cloudflare deploy",
+    "deploy:vinext": "MY_NODE_ENV=production vinext-cloudflare deploy",
+    "deploy:production": "MY_NODE_ENV=production vinext-cloudflare deploy && MY_NODE_ENV=production cf deploy --prebuilt --secrets-file .secret.production --worker mdark-sync && MY_NODE_ENV=production cf deploy --prebuilt --worker mdark-response-store",
+    "deploy:development": "MY_NODE_ENV=development vinext-cloudflare deploy && MY_NODE_ENV=development cf deploy --prebuilt --secrets-file .secret.development --worker mdark-dev-sync && MY_NODE_ENV=development cf deploy --prebuilt --worker mdark-dev-response-store"
   },
   "type": "module",
   "dependencies": {

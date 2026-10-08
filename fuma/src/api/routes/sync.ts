@@ -3,7 +3,7 @@ import type {SyncEnv} from "../../../sync/types.ts";
 import { SyncRunRepo } from "@repo/source";
 import {env} from "cloudflare:workers";
 import z from "zod";
-import {datasources} from "../../../datasource";
+import { datasources, devDatasource } from "../../../datasource";
 
 type Variables = {
   repo: SyncRunRepo;
@@ -24,7 +24,8 @@ export const sync = new Hono<{
   })
   .post('/sync', async (c) => {
     const repo = c.get('repo')
-    const datasourceIds = datasources.map((source) => source.id)
+    const ds = env.NODE_ENV === 'production' ? datasources : devDatasource;
+    const datasourceIds = ds.map((source) => source.id)
     const run = await repo.createRun(datasourceIds);
     const workflowId = `sync-${run.id}`;
     try {

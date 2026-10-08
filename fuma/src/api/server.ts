@@ -13,6 +13,7 @@ declare global {
       AI_SEARCH: AiSearchNamespace
       SYNC_WORKFLOW: Workflow
       SYNC_TOKEN: string
+      NODE_ENV: string
       BASE_URL: string
       GOOGLE_CLIENT_ID: string
       GOOGLE_CLIENT_SECRET: string
@@ -36,7 +37,7 @@ app.use(async (c, next) => {
   await next();
 })
 
-app.on(["POST", "GET"], "/api/auth/*", (c) => {
+app.on(["POST", "GET"], "/auth/*", (c) => {
   return createAuth().handler(c.req.raw);
 });
 app.route('/', searchRoute)

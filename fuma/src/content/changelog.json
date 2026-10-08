@@ -1,5 +1,9 @@
 [
   {
+    "time": "2026-10-08",
+    "content": "搜索接入 Algolia Search"
+  },
+  {
     "time": "2026-10-05",
     "content": "迁移至 Cloudflare Worker + vinext，并接入 Cloudflare AI Search"
   },

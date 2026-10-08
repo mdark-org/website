@@ -1,7 +1,7 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from 'cloudflare:workers'
 import { NonRetryableError } from 'cloudflare:workflows'
 import { SourceSyncError, SourceWriteRepo, syncDatasource } from '@repo/source/sync'
-import { datasources } from '../datasource'
+import { datasources, devDatasource } from '../datasource'
 import type { SyncEnv, SyncParams } from './types.ts'
 import { createDB } from '@repo/source'
 import {SyncRunRepo} from "@repo/source/sync";
@@ -21,10 +21,10 @@ export class SourceSyncWorkflow extends WorkflowEntrypoint<SyncEnv, SyncParams> 
     const db = createDB(this.env.DB)
     const repo = new SourceWriteRepo(db)
     const runRepo = new SyncRunRepo(db)
-
+    const ds = this.env.NODE_ENV === 'production' ? datasources : devDatasource
     const state = await step.do('start-run', () => stopOnSyncError(async () => {
       const run = await runRepo.getRun(runId)
-      const slugs = datasources.map((source) => source.id)
+      const slugs = ds.map((source) => source.id)
       if (!run || JSON.stringify(run.datasourceIds) !== JSON.stringify(slugs)) {
         throw new SourceSyncError('The configured datasource set changed after the run was queued.')
       }
@@ -35,7 +35,7 @@ export class SourceSyncWorkflow extends WorkflowEntrypoint<SyncEnv, SyncParams> 
     }))
     if (state === 'succeeded') return { runId, status: state }
     const results = []
-    for (const [sortOrder, source] of datasources.entries()) {
+    for (const [sortOrder, source] of ds.entries()) {
       const result = await step.do(`sync-${source.id}`, {
         retries: { limit: 3, delay: '10 seconds', backoff: 'exponential' },
         timeout: '30 minutes',
