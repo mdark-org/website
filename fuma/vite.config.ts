@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vite-plus";
 import vinext from "vinext";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { responseStoreServiceBinding, syncWorker } from "./cloudflare.config.ts";
@@ -20,10 +20,7 @@ export default defineConfig({
       images: { optimizer: imagesOptimizer() },
     }),
     cloudflare({
-      auxiliaryWorkers: [
-        { config: responseStoreServiceBinding },
-        { config: syncWorker }
-      ],
+      auxiliaryWorkers: [{ config: responseStoreServiceBinding }, { config: syncWorker }],
       viteEnvironment: {
         name: "rsc",
         childEnvironments: ["ssr"],

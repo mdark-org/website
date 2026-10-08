@@ -1,17 +1,16 @@
 {
   "name": "@mdark/website",
   "version": "1.0.0",
-  "scripts": {
-  },
   "license": "MIT",
-  "packageManager": "pnpm@12.5.1",
+  "scripts": {},
   "devDependencies": {
+    "@cloudflare/vitest-plugin": "catalog:",
+    "@types/node": "catalog:",
     "cf": "catalog:",
     "typescript": "catalog:",
-    "@types/node": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:",
     "vite-plus": "catalog:",
-    "@cloudflare/vitest-plugin": "catalog:"
-  }
+    "vitest": "catalog:"
+  },
+  "packageManager": "pnpm@12.5.1"
 }

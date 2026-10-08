@@ -10,10 +10,9 @@ allowBuilds:
   workerd: true
 
 catalog:
-  tsdown: ^0.23.0
-  vite: npm:@voidzero-dev/vite-plus-core@latest
-  vite-plus: latest
-  vitest: npm:@voidzero-dev/vite-plus-test@latest
+  vite: npm:@voidzero-dev/vite-plus-core@1.0.0
+  vite-plus: 1.0.0
+  vitest: 5.0.1
   zod: ^4
   typescript: ^7
   "@types/node": ^24
@@ -23,8 +22,8 @@ catalog:
   "@cloudflare/workers-types": latest
 catalogs:
   react:
-    react: '19.2.6'
-    react-dom: '19.2.6'
+    react: "19.2.6"
+    react-dom: "19.2.6"
     "@types/react": "^19"
     "@types/react-dom": "^19"
   drizzle:
@@ -41,20 +40,29 @@ catalogs:
     "fumadocs-core": ^16.15.17
 minimumReleaseAgeExclude:
   - tsdown@0.22.1
-  - '@cloudflare/workers-types@5.20260930.2'
-  - '@typescript/typescript-darwin-arm64@7.1.0-dev.20261002.1'
-  - '@typescript/typescript-darwin-x64@7.1.0-dev.20261002.1'
-  - '@typescript/typescript-linux-arm64@7.1.0-dev.20261002.1'
-  - '@typescript/typescript-linux-arm@7.1.0-dev.20261002.1'
-  - '@typescript/typescript-linux-x64@7.1.0-dev.20261002.1'
-  - '@typescript/typescript-win32-arm64@7.1.0-dev.20261002.1'
-  - '@typescript/typescript-win32-x64@7.1.0-dev.20261002.1'
+  - "@cloudflare/workers-types@5.20260930.2"
+  - "@typescript/typescript-darwin-arm64@7.1.0-dev.20261002.1"
+  - "@typescript/typescript-darwin-x64@7.1.0-dev.20261002.1"
+  - "@typescript/typescript-linux-arm64@7.1.0-dev.20261002.1"
+  - "@typescript/typescript-linux-arm@7.1.0-dev.20261002.1"
+  - "@typescript/typescript-linux-x64@7.1.0-dev.20261002.1"
+  - "@typescript/typescript-win32-arm64@7.1.0-dev.20261002.1"
+  - "@typescript/typescript-win32-x64@7.1.0-dev.20261002.1"
   - typescript@7.1.0-dev.20261002.1
   - vite@8.3.3
 patchedDependencies:
-  '@fuma-comment/server': patches/@fuma-comment__server.patch
+  "@fuma-comment/server": patches/@fuma-comment__server.patch
   fumadocs-core: patches/fumadocs-core.patch
 
 overrides:
-  '@types/hast': 3.0.5
+  "@types/hast": 3.0.5
   drizzle-orm: 1.0.0-rc.4
+  vite@*: "catalog:"
+  vitest@*: "catalog:"
+peerDependencyRules:
+  allowAny:
+    - vite
+    - vitest
+  allowedVersions:
+    vite: "*"
+    vitest: "*"

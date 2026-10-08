@@ -43,3 +43,4 @@ wrangler.jsonc
 .secret
 .secret.*
 .env.*
+.vitest/
