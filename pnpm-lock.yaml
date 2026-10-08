@@ -402,6 +402,9 @@ importers:
       drizzle-kit:
         specifier: catalog:drizzle
         version: 1.0.0-rc.5-ab785fc
+      miniflare:
+        specifier: 5.20260930.0-alpha
+        version: 5.20260930.0-alpha(@types/node@24.19.0)
       react-medium-image-zoom:
         specifier: ^5.4.5
         version: 5.4.9(react-dom@19.3.0(react@19.3.0))(react@19.3.0)

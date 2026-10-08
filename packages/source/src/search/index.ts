@@ -5,7 +5,6 @@ import { indexer } from './v2/indexer'
 import { ManifestStoreV2, type ItemMetadata } from './v2/manifest'
 export * from './v2/search'
 export { AISearchAdapter } from './adapters/ai-search-file'
-export { AlgoliaSearchAdapter, type AlgoliaSearchAdapterOptions } from './adapters/algo'
 export { AlgoliaV2SearchAdapter, type AlgoliaV2SearchAdapterOptions } from './adapters/algolia-v2'
 
 type SyncStatus = {

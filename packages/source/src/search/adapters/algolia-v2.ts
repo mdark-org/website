@@ -75,7 +75,6 @@ export class AlgoliaV2SearchAdapter implements SearchAdapter<SearchFileItem, Doc
       await this.client.saveObjects({
         indexName: this.indexName,
         objects,
-        waitForTasks: true,
       })
     }
 
@@ -88,7 +87,6 @@ export class AlgoliaV2SearchAdapter implements SearchAdapter<SearchFileItem, Doc
     await this.client.deleteObjects({
       indexName: this.indexName,
       objectIDs: item.objectIDs,
-      waitForTasks: true,
     })
   }
 }
@@ -99,7 +97,7 @@ function createDocumentRecord(revision: SearchItemInput): DocumentRecord {
     title: revision.pageTitle,
     ...(revision.description === null ? {} : { description: revision.description }),
     url: revision.url,
-    structured: structure(revision.content),
+    structured: mergeContents(structure(revision.content)),
     tag: revision.tag,
   }
 }
@@ -138,4 +136,25 @@ function createAlgoliaRecords(itemKey: string, page: DocumentRecord): AlgoliaRec
   }
 
   return records
+}
+
+type StructuredData = ReturnType<typeof structure>;
+
+function mergeContents(data: StructuredData, maxChars = 300): StructuredData {
+  const contents: StructuredData['contents'] = [];
+  for (const item of data.contents) {
+    const content = item.content.trim();
+    if (!content) continue;
+    if (/^https?:\/\/\S+$/i.test(content)) continue;
+    const prev = contents.at(-1);
+    if (prev && prev.heading === item.heading) {
+      const combined = `${prev.content}\n\n${content}`;
+      if (Array.from(combined).length <= maxChars) {
+        prev.content = combined;
+        continue;
+      }
+    }
+    contents.push({ ...item, content });
+  }
+  return { ...data, contents };
 }

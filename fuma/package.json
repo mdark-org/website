@@ -73,6 +73,7 @@
     "cf": "catalog:",
     "dotenv": "^18.0.5",
     "drizzle-kit": "catalog:drizzle",
+    "miniflare": "5.20260930.0-alpha",
     "p-limit": "^7.3.3",
     "react-medium-image-zoom": "^5.4.5",
     "tailwindcss": "catalog:tailwindcss",
