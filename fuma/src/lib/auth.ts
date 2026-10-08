@@ -6,7 +6,6 @@ import {env} from 'cloudflare:workers'
 export const createAuth = () => {
   const db = createDB()
   return betterAuth({
-    baseURL: env.BASE_URL,
     database: drizzleAdapter(db, {
       provider: 'sqlite',
       schema: {
