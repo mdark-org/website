@@ -59,7 +59,7 @@ export default defineConfig(({mode, isPreview}) => ({
     domains: isProd ? ['prod.mdark.org', 'mdark.org'] : ['preview.mdark.org'],
     ...responseStore.applicationWorker,
     name: name,
-    entrypoint: "./worker.ts",
+    entrypoint: "./src/worker.ts",
     exports: { ...workflowExport },
     limits: { cpuMs: 300_000, subrequests: 100_000 },
     compatibilityDate: "2026-09-30",
