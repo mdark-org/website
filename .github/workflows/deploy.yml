@@ -42,5 +42,5 @@ jobs:
               { mode: 0o600 }
             );
       - name: deploy development
-        shell: pnpm run deploy:development
+        run: pnpm run deploy:development
         working-directory: fuma
