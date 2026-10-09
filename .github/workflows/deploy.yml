@@ -57,9 +57,7 @@ jobs:
           }
           
           const write = (filename, values) => {
-            const output = path.resolve('fuma', filename);
-            fs.mkdirSync(path.dirname(output), { recursive: true });
-          
+            const output = filename;
             fs.writeFileSync(
               output,
               Object.entries(values)
