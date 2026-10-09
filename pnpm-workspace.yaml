@@ -16,9 +16,9 @@ catalog:
   zod: ^4
   typescript: ^7
   "@types/node": ^24
-  "cf": "^1.0.0-beta.12"
-  "@cloudflare/vitest-plugin": "^1.3.6"
-  "@cloudflare/vite-plugin": "2.0.0-beta.sha-ad79608dd"
+  "cf": "^1.0.0-beta.13"
+  "@cloudflare/vitest-plugin": "^1.4.0"
+  "@cloudflare/vite-plugin": "2.0.0-beta.sha-91c870c02"
   "@cloudflare/workers-types": latest
 catalogs:
   react:
