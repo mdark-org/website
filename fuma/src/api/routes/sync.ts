@@ -2,7 +2,7 @@ import {Hono} from "hono";
 import { SyncRunRepo } from "@repo/source";
 import {env} from "cloudflare:workers";
 import z from "zod";
-import { datasources, devDatasource } from "../../../datasource";
+import { datasources, devDatasource } from "@/datasource";
 
 type Variables = {
   repo: SyncRunRepo;

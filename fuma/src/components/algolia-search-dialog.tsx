@@ -7,7 +7,7 @@ import {
   SearchDialogIcon, SearchDialogInput, SearchDialogList, SearchDialogOverlay,
   TagsList, TagsListItem, type SharedProps,
 } from 'fumadocs-ui/components/dialog/search'
-import { config } from '../../config'
+import { config } from '@/config'
 import { createAlgoliaSearchClient } from '../lib/search/algolia-client'
 
 export default function AlgoliaDocsSearchDialog(props: SharedProps) {

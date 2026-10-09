@@ -4,7 +4,7 @@ import {SyncRunRepo} from "@repo/source";
 import {env} from "cloudflare:workers";
 import {liteClient} from "algoliasearch/lite";
 import {algoliaClient} from "fumadocs-core/search/client/algolia";
-import {config} from "../../../config";
+import {config} from "@/config";
 
 export const searchRoute = new Hono()
 searchRoute.get('/search', async (c) => {

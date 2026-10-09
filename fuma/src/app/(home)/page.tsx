@@ -1,6 +1,6 @@
 
 import { buttonVariants } from '@/components/ui/button';
-import { config } from '../../../config/index';
+import { config } from '@/config';
 import Link from 'fumadocs-core/link';
 import { source } from '@/lib/source';
 import PageItem from '@/components/page-item';

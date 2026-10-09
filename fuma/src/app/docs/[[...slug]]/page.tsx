@@ -5,7 +5,7 @@ import { notFound, redirect } from 'next/navigation'
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import Video from '@/app/docs/[[...slug]]/video'
 import { Comments } from '@/components/comment.tsx'
-import { config } from '../../../../config'
+import { config } from '@/config'
 import { renderMarkdown } from '@/lib/markdown';
 import {ImageZoom} from "@/components/image-zoom.tsx";
 

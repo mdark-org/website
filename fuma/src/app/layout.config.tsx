@@ -1,5 +1,5 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
-import { config } from '../../config'
+import { config } from '@/config'
 import { LinkItemType } from "fumadocs-ui/layouts/shared";
 import { AlbumIcon } from "lucide-react";
 import TelegramIcon from "@/components/icons/telegram.tsx";

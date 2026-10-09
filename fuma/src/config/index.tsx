@@ -46,7 +46,7 @@ export const config: Config = {
   title: 'MDARK',
   description: 'MDARK',
   sponsorUrl,
-  github: { owner: 'mdark-org', repo: 'bili-archive', sha: 'main' },
+  github: { owner: 'mdark-org', repo: 'website', sha: 'main' },
   baseUrl: baseUrl,
   search: { tags: searchTags, defaultSearchTag },
   feed: {

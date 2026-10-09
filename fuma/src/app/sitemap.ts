@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { source } from '@/lib/source';
-import {config} from "../../config";
+import {config} from "@/config";
 
 export const revalidate = 3600;
 

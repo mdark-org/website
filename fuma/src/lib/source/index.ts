@@ -1,7 +1,7 @@
 import type { DatasourceInfo, Folder, Page, Item, Node,Root, ISourceReadRepo } from '@repo/source'
 import type * as PageTree from 'fumadocs-core/page-tree'
 import type { LayoutTab } from 'fumadocs-ui/layouts/shared'
-import { config } from '../../../config'
+import { config } from '@/config'
 import { buildDatasourceFeed, buildSiteFeed } from './rss'
 import { icon } from './icon'
 

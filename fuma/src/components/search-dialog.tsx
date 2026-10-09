@@ -8,7 +8,7 @@ import {
   TagsList, TagsListItem, type SharedProps,
 } from 'fumadocs-ui/components/dialog/search'
 import { RefreshCw, X } from 'lucide-react'
-import { config } from '../../config'
+import { config } from '@/config'
 import { createSearchClient } from '../lib/search/client.ts'
 
 export default function DocsSearchDialog(props: SharedProps) {

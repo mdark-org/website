@@ -1,7 +1,7 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from 'cloudflare:workers'
 import { NonRetryableError } from 'cloudflare:workflows'
 import { SourceSyncError, SourceWriteRepo, syncDatasource } from '@repo/source/sync'
-import { datasources, devDatasource } from '../../../datasource'
+import { datasources, devDatasource } from '@/datasource'
 import type { Env, SyncParams } from '@/worker'
 import { createDB } from '@repo/source'
 import { SyncRunRepo } from "@repo/source/sync";

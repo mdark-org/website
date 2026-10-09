@@ -1,6 +1,6 @@
 import { Feed, type FeedOptions } from 'feed'
 import type { DatasourceInfo, ISourceReadRepo } from '@repo/source'
-import { config } from '../../../config'
+import { config } from '@/config'
 import { parserAsDate } from '@/lib/date'
 import {renderMarkdownRSS} from "@/lib/markdown.ts";
 
