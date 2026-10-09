@@ -1,0 +1,46 @@
+name: Deploy Worker
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: setup node
+        uses: actions/setup-node@v7
+      - name: install deps
+        uses: pnpm/setup@v3
+      - name: Generate .env
+        uses: actions/github-script@v9
+        env:
+          INPUT_SECRETS: ${{ toJSON(secrets) }}
+          INPUT_VARS: ${{ toJSON(vars) }}
+          ENV_PATH: fuma/.env.deployment
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            
+            const secrets = JSON.parse(process.env.INPUT_SECRETS);
+            const vars = JSON.parse(process.env.INPUT_VARS);
+            const values = { ...vars, ...secrets };
+            const output = path.resolve(process.env.ENV_PATH);
+            fs.mkdirSync(path.dirname(output), { recursive: true });
+            
+            fs.writeFileSync(
+              output,
+              Object.entries(values)
+                .map(([key, value]) => `${key}=${JSON.stringify(value)}`)
+                .join('\n') + '\n',
+              { mode: 0o600 }
+            );
+      - name: deploy development
+        shell: pnpm run deploy:development
+        working-directory: fuma
