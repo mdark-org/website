@@ -33,7 +33,29 @@ jobs:
             const values = { ...vars, ...secrets };
             const output = path.resolve(process.env.ENV_PATH);
             fs.mkdirSync(path.dirname(output), { recursive: true });
-            
+            .secret.development
+            fs.writeFileSync(
+              output,
+              Object.entries(values)
+                .map(([key, value]) => `${key}=${JSON.stringify(value)}`)
+                .join('\n') + '\n',
+              { mode: 0o600 }
+            );
+
+      - name: Generate .secret
+        uses: actions/github-script@v9
+        env:
+          INPUT_SECRETS: ${{ toJSON(secrets) }}
+          ENV_PATH: fuma/.secret.development
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const secrets = JSON.parse(process.env.INPUT_SECRETS);
+            const values = secrets;
+            const output = path.resolve(process.env.ENV_PATH);
+            fs.mkdirSync(path.dirname(output), { recursive: true });
+            .secret.development
             fs.writeFileSync(
               output,
               Object.entries(values)
