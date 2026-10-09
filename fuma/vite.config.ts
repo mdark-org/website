@@ -1,7 +1,7 @@
 import { defineConfig } from "vite-plus";
 import vinext from "vinext";
 import { cloudflare } from "@cloudflare/vite-plugin";
-import { responseStoreServiceBinding, syncWorker } from "./cloudflare.config.ts";
+import { responseStoreServiceBinding } from "./cloudflare.config.ts";
 import { responseStoreAdapter } from "@vinext/cloudflare/cache/response-store-adapter";
 import { imagesOptimizer } from "@vinext/cloudflare/images/images-optimizer";
 import tailwindcss from "@tailwindcss/vite";
@@ -20,7 +20,7 @@ export default defineConfig({
       images: { optimizer: imagesOptimizer() },
     }),
     cloudflare({
-      auxiliaryWorkers: [{ config: responseStoreServiceBinding }, { config: syncWorker }],
+      auxiliaryWorkers: [{ config: responseStoreServiceBinding }],
       viteEnvironment: {
         name: "rsc",
         childEnvironments: ["ssr"],

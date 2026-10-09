@@ -27,12 +27,12 @@ const bucket = {
 const workflows = {
   SYNC_WORKFLOW: bindings.workflow({
     name: `${name}-sync`,
-    worker: `${name}-sync`,
+    worker: name,
     exportName: "SourceSyncWorkflow",
   }),
   INDEX_WORKFLOW: bindings.workflow({
     name: `${name}-search-indexer`,
-    worker: `${name}-sync`,
+    worker: name,
     exportName: "IndexWorkflow",
   })
 }
@@ -54,37 +54,14 @@ const responseStore = await createWorkersResponseStoreServiceBindingConfig({
 
 export const responseStoreServiceBinding = responseStore.serviceBindingWorker;
 
-export const syncWorker = defineWorker({
-  name: `${name}-sync`,
-  entrypoint: "./sync/worker.ts",
-  compatibilityDate: "2026-09-30",
-  compatibilityFlags: ["nodejs_compat"],
-  observability: {
-    enabled:true,
-  },
-  limits: { cpuMs: 300_000, subrequests: 100_000 },
-  exports: {
-    ...workflowExport
-  },
-  env: {
-    ...db,
-    ...ai,
-    ...bucket,
-    ...workflows,
-    ALGOLIA_APP_ID: bindings.secret(),
-    NODE_ENV: bindings.text(nodeEnv),
-    ALGOLIA_SECRET_API_KEY: bindings.secret(),
-    SYNC_TOKEN: bindings.secret(),
-    GITHUB_TOKEN: bindings.secret(),
-  },
-});
-
 export default defineConfig(({mode, isPreview}) => ({
   worker: defineWorker({
     domains: isProd ? ['prod.mdark.org', 'mdark.org'] : ['preview.mdark.org'],
     ...responseStore.applicationWorker,
     name: name,
-    entrypoint: "vinext/server/fetch-handler",
+    entrypoint: "./worker.ts",
+    exports: { ...workflowExport },
+    limits: { cpuMs: 300_000, subrequests: 100_000 },
     compatibilityDate: "2026-09-30",
     compatibilityFlags: ["nodejs_compat"],
     assets: { notFoundHandling: "none" },
@@ -95,6 +72,7 @@ export default defineConfig(({mode, isPreview}) => ({
       }
     },
     env: {
+      ...bucket,
       ...workflows,
       ...ai,
       ...db,

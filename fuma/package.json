@@ -15,8 +15,8 @@
     "start:vinext": "vp preview",
     "deploy:vinext:dev": "MY_NODE_ENV=development vinext-cloudflare deploy",
     "deploy:vinext": "MY_NODE_ENV=production vinext-cloudflare deploy",
-    "deploy:production": "MY_NODE_ENV=production vinext-cloudflare deploy && MY_NODE_ENV=production cf deploy --prebuilt --secrets-file .secret.production --worker mdark-sync && MY_NODE_ENV=production cf deploy --prebuilt --worker mdark-response-store",
-    "deploy:development": "MY_NODE_ENV=development vinext-cloudflare deploy && MY_NODE_ENV=development cf deploy --prebuilt --secrets-file .secret.development --worker mdark-dev-sync && MY_NODE_ENV=development cf deploy --prebuilt --worker mdark-dev-response-store"
+    "deploy:production": "MY_NODE_ENV=production vinext-cloudflare deploy && MY_NODE_ENV=production cf deploy --prebuilt --worker mdark-response-store",
+    "deploy:development": "MY_NODE_ENV=development vinext-cloudflare deploy && MY_NODE_ENV=development cf deploy --prebuilt --worker mdark-dev-response-store"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
