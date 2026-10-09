@@ -20,22 +20,45 @@ jobs:
         uses: actions/setup-node@v7
       - name: install deps
         uses: pnpm/setup@v3
-      - name: Generate .env
-        uses: actions/github-script@v9
+      - name: Generate deployment .env and .secret
+        shell: bash
+        working-directory: fuma
         env:
-          INPUT_SECRETS: ${{ toJSON(secrets) }}
           INPUT_VARS: ${{ toJSON(vars) }}
-          ENV_PATH: fuma/.env.${{ env.DEPLOY_ENV }}
-        with:
-          script: |
-            const fs = require('node:fs');
-            const path = require('node:path');
-            
-            const secrets = JSON.parse(process.env.INPUT_SECRETS);
-            const vars = JSON.parse(process.env.INPUT_VARS);
-            const values = { ...vars, ...secrets };
-            const output = path.resolve(process.env.ENV_PATH);
+          ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+          ALGOLIA_SECRET_API_KEY: ${{ secrets.ALGOLIA_SECRET_API_KEY }}
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const environment = process.env.DEPLOY_ENV;
+          const vars = JSON.parse(process.env.INPUT_VARS || '{}');
+          const secrets = {
+            ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
+            ALGOLIA_SECRET_API_KEY: process.env.ALGOLIA_SECRET_API_KEY,
+            SYNC_TOKEN: process.env.SYNC_TOKEN,
+            GITHUB_TOKEN: process.env.GITHUB_TOKEN,
+            BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+            GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+            GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+          };
+          
+          const missing = Object.entries(secrets)
+            .filter(([, value]) => !value)
+            .map(([key]) => key);
+          if (missing.length) {
+            throw new Error(`Missing secrets: ${missing.join(', ')}`);
+          }
+          
+          const write = (filename, values) => {
+            const output = path.resolve('fuma', filename);
             fs.mkdirSync(path.dirname(output), { recursive: true });
+          
             fs.writeFileSync(
               output,
               Object.entries(values)
@@ -43,27 +66,11 @@ jobs:
                 .join('\n') + '\n',
               { mode: 0o600 }
             );
-
-      - name: Generate .secret
-        uses: actions/github-script@v9
-        env:
-          INPUT_SECRETS: ${{ toJSON(secrets) }}
-          ENV_PATH: fuma/.secret.${{ env.DEPLOY_ENV }}
-        with:
-          script: |
-            const fs = require('node:fs');
-            const path = require('node:path');
-            const secrets = JSON.parse(process.env.INPUT_SECRETS);
-            const values = secrets;
-            const output = path.resolve(process.env.ENV_PATH);
-            fs.mkdirSync(path.dirname(output), { recursive: true });
-            fs.writeFileSync(
-              output,
-              Object.entries(values)
-                .map(([key, value]) => `${key}=${JSON.stringify(value)}`)
-                .join('\n') + '\n',
-              { mode: 0o600 }
-            );
+          };
+          
+          write(`.env.${environment}`, { ...vars, ...secrets });
+          write(`.secret.${environment}`, secrets);
+          NODE
       - name: migrate db
         run: pnpm run migrate:${{ env.DEPLOY_ENV }}
         working-directory: fuma
