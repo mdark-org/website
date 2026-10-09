@@ -32,6 +32,7 @@ jobs:
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          DEPLOY_ENV: ${{ env.DEPLOY_ENV }}
         run: |
           node <<'NODE'
           const fs = require('node:fs');
