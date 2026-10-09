@@ -3,11 +3,14 @@ on:
   push:
     branches:
       - main
+      - dev
   workflow_dispatch:
+env:
+  DEPLOY_ENV: ${{ github.ref_name == 'main' && 'production' || 'development' }}
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ env.DEPLOY_ENV }}
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -22,7 +25,7 @@ jobs:
         env:
           INPUT_SECRETS: ${{ toJSON(secrets) }}
           INPUT_VARS: ${{ toJSON(vars) }}
-          ENV_PATH: fuma/.env.deployment
+          ENV_PATH: fuma/.env.${{ env.DEPLOY_ENV }}
         with:
           script: |
             const fs = require('node:fs');
@@ -45,7 +48,7 @@ jobs:
         uses: actions/github-script@v9
         env:
           INPUT_SECRETS: ${{ toJSON(secrets) }}
-          ENV_PATH: fuma/.secret.development
+          ENV_PATH: fuma/.secret.${{ env.DEPLOY_ENV }}
         with:
           script: |
             const fs = require('node:fs');
@@ -61,6 +64,9 @@ jobs:
                 .join('\n') + '\n',
               { mode: 0o600 }
             );
-      - name: deploy development
-        run: pnpm run deploy:development
+      - name: migrate db
+        run: pnpm run migrate:${{ env.DEPLOY_ENV }}
+        working-directory: fuma
+      - name: deploy to cloudflare worker
+        run: pnpm run deploy:${{ env.DEPLOY_ENV }}
         working-directory: fuma
