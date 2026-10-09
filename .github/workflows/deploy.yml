@@ -33,7 +33,6 @@ jobs:
             const values = { ...vars, ...secrets };
             const output = path.resolve(process.env.ENV_PATH);
             fs.mkdirSync(path.dirname(output), { recursive: true });
-            .secret.development
             fs.writeFileSync(
               output,
               Object.entries(values)
