@@ -1,10 +1,10 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from 'cloudflare:workers'
 import { NonRetryableError } from 'cloudflare:workflows'
 import { SourceSyncError, SourceWriteRepo, syncDatasource } from '@repo/source/sync'
-import { datasources, devDatasource } from '../datasource'
-import type { SyncEnv, SyncParams } from './types.ts'
+import { datasources, devDatasource } from '../../../datasource'
+import type { Env, SyncParams } from '@/worker'
 import { createDB } from '@repo/source'
-import {SyncRunRepo} from "@repo/source/sync";
+import { SyncRunRepo } from "@repo/source/sync";
 
 async function stopOnSyncError<T>(operation: () => Promise<T>): Promise<T> {
   try {
@@ -15,7 +15,7 @@ async function stopOnSyncError<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 
-export class SourceSyncWorkflow extends WorkflowEntrypoint<SyncEnv, SyncParams> {
+export class SourceSyncWorkflow extends WorkflowEntrypoint<Env, SyncParams> {
   async run(event: WorkflowEvent<SyncParams>, step: WorkflowStep) {
     const runId = event.payload.runId
     const db = createDB(this.env.DB)

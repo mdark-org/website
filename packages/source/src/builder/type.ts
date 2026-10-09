@@ -15,7 +15,7 @@ export type VFilePath = {
 type DatasourceInfo = {
   id: string
   name: string
-  // slug: string
+  slug?: string
   mountedPath: string
   category?: string[],
   description: string,

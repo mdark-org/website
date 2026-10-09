@@ -1,5 +1,4 @@
 import {Hono} from "hono";
-import type {SyncEnv} from "../../../sync/types.ts";
 import { SyncRunRepo } from "@repo/source";
 import {env} from "cloudflare:workers";
 import z from "zod";
@@ -10,7 +9,6 @@ type Variables = {
 }
 
 export const sync = new Hono<{
-  Bindings: SyncEnv;
   Variables: Variables
 }>()
   .use('*', async (c, next) => {

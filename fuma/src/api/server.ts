@@ -6,22 +6,6 @@ import {sync} from "../api/routes/sync.ts";
 import {createAuth} from "@/lib/auth.ts";
 import {uploadHandler} from "@/lib/uploadthing.ts";
 
-declare global {
-  namespace Cloudflare {
-    interface Env {
-      DB: D1Database
-      AI_SEARCH: AiSearchNamespace
-      SYNC_WORKFLOW: Workflow
-      SYNC_TOKEN: string
-      NODE_ENV: string
-      BASE_URL: string
-      GOOGLE_CLIENT_ID: string
-      GOOGLE_CLIENT_SECRET: string
-      ALGOLIA_APP_ID: string
-      ALGOLIA_SECRET_API_KEY: string
-    }
-  }
-}
 declare module 'hono' {
   interface ContextVariableMap {
     db: DB

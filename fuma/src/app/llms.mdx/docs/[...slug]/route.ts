@@ -1,4 +1,4 @@
-import { source } from '../../../../lib/source/index.ts';
+import { source } from '@/lib/source';
 
 export const revalidate = 600;
 

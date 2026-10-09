@@ -1,5 +1,3 @@
-
-import type { R2Bucket } from '@cloudflare/workers-types'
 import type { SearchAdapter } from './v2/adapter'
 import { indexer } from './v2/indexer'
 import { ManifestStoreV2, type ItemMetadata } from './v2/manifest'
