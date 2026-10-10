@@ -16,7 +16,7 @@
     "deploy:production": "vinext-cloudflare deploy --env production",
     "build:preview": "CLOUDFLARE_PREVIEW_BUILD=true vp build --mode=development",
     "deploy:preview": "pnpm run build:preview && CLOUDFLARE_PREVIEW_BUILD=true cf previews deploy --prebuilt --mode=development",
-    "deploy:deployment": "pnpm run build:preview && CLOUDFLARE_PREVIEW_BUILD=true cf previews deploy --prebuilt --mode=development",
+    "deploy:development": "pnpm run build:preview && CLOUDFLARE_PREVIEW_BUILD=true cf previews deploy --prebuilt --mode=development",
     "deploy:store": "vp build --mode=production && cf deploy --prebuilt --worker mdark-response-store"
   },
   "dependencies": {
