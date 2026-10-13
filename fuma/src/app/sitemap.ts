@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { source } from '@/lib/source';
 import {config} from "@/config";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const url = (path: string): string => new URL(path, config.baseUrl).toString();

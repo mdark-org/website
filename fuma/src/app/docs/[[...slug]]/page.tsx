@@ -67,7 +67,8 @@ export default async function Page(props: {
 
 
 // Content lives in D1 and is synced out-of-band: render on demand, cache, refresh in the background.
-export const revalidate = 600;
+// 3600 x 24 x 3
+export const revalidate = 259200;
 export const dynamicParams = true;
 
 // Nothing is prerendered at build time (there is no D1 binding during `vite build`).

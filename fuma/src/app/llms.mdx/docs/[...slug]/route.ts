@@ -1,6 +1,6 @@
 import { source } from '@/lib/source';
-
-export const revalidate = 600;
+// 3600 x 24 x 3
+export const revalidate = 259200;
 
 export async function GET(_request: Request, context: {
   params: Promise<{ slug: string[] }>;
