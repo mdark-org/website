@@ -35,8 +35,12 @@ export default defineConfig(({mode, isPreview}) => {
       observability: {
         enabled:true,
         logs: {
-          invocationLogs: false,
-        }
+          enabled: true,
+          invocationLogs: true,
+          persist: true,
+          headSamplingRate: 1,
+        },
+        headSamplingRate: 1,
       },
       exports: {
         SourceSyncWorkflow: workerExports.workflow({ name: `${name}-sync` }),
