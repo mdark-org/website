@@ -47,7 +47,7 @@ export class SourceSyncWorkflow extends WorkflowEntrypoint<Env, SyncParams> {
     // 调用 search workflow
     await step.do('trigger-index-workflow',async () => {
       await this.env.INDEX_WORKFLOW.create({
-        id: `index-sync-run-${runId}`,
+        id: `index-sync-run-${this.env.NODE_ENV}-${runId}`,
         params: { runId }
       })
     })

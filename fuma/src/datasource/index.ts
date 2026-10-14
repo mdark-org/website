@@ -1,5 +1,5 @@
 import type { Datasource } from "@repo/source/builder";
-import {addRSSPage, dateFolderTransformer, indexFolderTransformer} from "./transformer.ts";
+import {addRSSPage, imagePageTransformer, dateFolderTransformer, indexFolderTransformer} from "./transformer.ts";
 
 const ctx = {
   env: {
@@ -25,7 +25,8 @@ export const datasources = [
     github: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/btnews" },
     transformers: {
       root: [ addRSSPage(`${ctx.env.BASE_URL}/rss/btnews`), indexFolderTransformer ],
-      folder:[ indexFolderTransformer ]
+      folder:[ indexFolderTransformer ],
+      page: [ imagePageTransformer ],
     },
   },
   {
@@ -87,7 +88,8 @@ export const datasources = [
         addRSSPage(`${ctx.env.BASE_URL}/rss/opinion`),
         indexFolderTransformer
       ],
-      folder:[ indexFolderTransformer ]
+      folder:[ indexFolderTransformer ],
+      page: [ imagePageTransformer ]
     }
   },
   {

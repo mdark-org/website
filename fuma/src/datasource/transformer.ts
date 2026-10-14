@@ -1,4 +1,4 @@
-import type { FolderTransformer, RootTransformer } from "@repo/source/builder";
+import type {FolderTransformer, RootTransformer, PageTransformer} from "@repo/source/builder";
 
 export const indexFolderTransformer: FolderTransformer = {
   beforeBuildTree: (folder) => {
@@ -13,6 +13,16 @@ export const indexFolderTransformer: FolderTransformer = {
   }
 }
 
+export const imagePageTransformer: PageTransformer = (page) => {
+  const content = page.content?.replace(
+    /(!\[[^\]]*\]\(\s*<?)\/images\//g,
+    '$1https://s3.mdark.org/images/',
+  )
+  return {
+    ...page,
+    content,
+  }
+}
 
 export const dateFolderTransformer: FolderTransformer = {
   beforeBuildTree: (folder) => {
