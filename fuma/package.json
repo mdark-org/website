@@ -13,11 +13,10 @@
     "migrate:production": "cf d1 migrations apply b064e2bf-7210-41dd-90f1-be5b4bf8b864 --dir drizzle/d1",
     "dev:vinext": "vp dev --mode=development",
     "start:vinext": "vp preview",
-    "deploy:production": "vinext-cloudflare deploy --env production",
-    "build:preview": "CLOUDFLARE_PREVIEW_BUILD=true vp build --mode=development",
-    "build:production": "vp build --mode=development",
+    "build:preview": "vp build --mode=development",
     "deploy:preview": "pnpm run build:preview && cf previews deploy --prebuilt --mode=development",
-    "deploy:development": "pnpm run build:preview && CLOUDFLARE_PREVIEW_BUILD=true cf previews deploy --prebuilt --mode=development",
+    "deploy:development": "pnpm run build:preview && cf deploy --prebuilt --mode=development --secrets-file=.secret.development",
+    "deploy:production": "vinext-cloudflare deploy --env production",
     "deploy:store": "vp build --mode=production && cf deploy --prebuilt --worker mdark-response-store"
   },
   "dependencies": {

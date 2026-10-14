@@ -25,7 +25,7 @@ export const sync = new Hono<{
     const ds = env.NODE_ENV === 'production' ? datasources : devDatasource;
     const datasourceIds = ds.map((source) => source.id)
     const run = await repo.createRun(datasourceIds);
-    const workflowId = `sync-${run.id}`;
+    const workflowId = `sync-${env.NODE_ENV}-${run.id}`;
     try {
       await env.SYNC_WORKFLOW.create({ id: workflowId, params: { runId: run.id } });
     } catch (error) {
