@@ -1,6 +1,6 @@
 import type {BuiltinDriverOptions} from "unstorage";
 
-import { Folder, Item, Node } from "../types/fuma";
+import {Folder, Item, Node, PageWithContent} from "../types/fuma";
 
 export type VFilePath = {
   path: string
@@ -53,6 +53,7 @@ export type UnStorageProvider<Driver extends keyof BuiltinDriverOptions | unknow
 
 export type Transformer<P extends Node = Node> =  <T extends P>(node: T) => T | void
 
+export type PageTransformer = Transformer<PageWithContent>
 export type RootTransformer = Partial<{
   beforeBuildTree: Transformer<Folder>,
   postBuildTree: Transformer<Folder>
@@ -66,6 +67,6 @@ export type FolderTransformer = Partial<{
 export type Transformers = Partial<{
   root: RootTransformer[]
   folder: FolderTransformer[]
-  page: Transformer<Item>[]
+  page: Transformer<PageWithContent>[]
 }>
 
