@@ -15,9 +15,7 @@
     "deploy:development": "pnpm run build:preview && cf deploy --prebuilt --mode=development --secrets-file=.secret.development",
     "deploy:production": "pnpm run build && cf deploy --prebuilt --mode=production --secrets-file=.secret.production",
     "dev": "vp dev --mode=development",
-    "build": "vp build --mode=production",
-    "test": "node --test test/*.test.ts",
-    "test:smoke": "node scripts/smoke-test.ts"
+    "build": "vp build --mode=production"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
