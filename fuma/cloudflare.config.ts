@@ -1,31 +1,19 @@
 import { bindings, defineConfig, defineWorker, exports as workerExports } from "cf/config";
-import { createWorkersResponseStoreServiceBindingConfig } from "@vinext/cloudflare/cache/config";
 
-
-const responseStore = await createWorkersResponseStoreServiceBindingConfig({
-  worker: {
-    name: `mdark-response-store`,
-    compatibilityDate: "2026-09-30",
-    compatibilityFlags: ["nodejs_compat"],
-  },
-  bucket: `mdark-response-store-cache-bodies`,
-});
-
-export const responseStoreServiceBinding = responseStore.serviceBindingWorker;
-
-export default defineConfig(({mode, isPreview}) => {
+export default defineConfig(({ mode, isPreview }) => {
   console.log(`build ctx: mode:${mode}, preview:${isPreview}`);
-  const isProd = !isPreview && mode === 'production';
-  const name = isProd ? 'mdark'  : 'mdark-dev';
+  const isProd = !isPreview && mode === "production";
+  const name = isProd ? "mdark" : "mdark-dev";
   // preview env 需要显式提供 dbId，否则 d1 binding 会被忽略
-  const dbId = isProd ? '8e3e8697-7153-472c-97b5-9e7c1ef352c2' : undefined
+  const dbId =
+    process.env.CLOUDFLARE_D1_DATABASE_ID ??
+    (!isProd ? "8e3e8697-7153-472c-97b5-9e7c1ef352c2" : undefined);
 
-  return  {
+  return {
     worker: defineWorker({
-      domains: isProd ? ['prod.mdark.org', 'mdark.org'] : ['preview.mdark.org'],
+      domains: isProd ? ["prod.mdark.org", "mdark.org"] : ["preview.mdark.org"],
       workersDev: !isProd,
       previewUrls: true,
-      ...responseStore.applicationWorker,
       name: name,
       entrypoint: "./src/worker.ts",
       limits: { cpuMs: 300_000, subrequests: 100_000 },
@@ -33,7 +21,7 @@ export default defineConfig(({mode, isPreview}) => {
       compatibilityFlags: ["nodejs_compat"],
       assets: { notFoundHandling: "none" },
       observability: {
-        enabled:true,
+        enabled: true,
         logs: {
           enabled: true,
           invocationLogs: true,
@@ -44,12 +32,11 @@ export default defineConfig(({mode, isPreview}) => {
       },
       exports: {
         SourceSyncWorkflow: workerExports.workflow({ name: `${name}-sync` }),
-        IndexWorkflow:workerExports.workflow({ name: `${name}-search-indexer` }),
+        IndexWorkflow: workerExports.workflow({ name: `${name}-search-indexer` }),
       },
       env: {
-        ...responseStore.applicationWorker.env,
         DB: bindings.d1({ name: name, id: dbId }),
-        AI_SEARCH: bindings.aiSearchNamespace({ namespace: 'mdark', dev: { remote: true } }),
+        AI_SEARCH: bindings.aiSearchNamespace({ namespace: "mdark", dev: { remote: true } }),
         SEARCH_MANIFESTS: bindings.r2({ name: `${name}-search-manifests` }),
         SYNC_WORKFLOW: bindings.workflow({
           name: `${name}-sync`,
@@ -62,20 +49,25 @@ export default defineConfig(({mode, isPreview}) => {
           exportName: "IndexWorkflow",
         }),
         ASSETS: bindings.assets(),
-        NODE_ENV: bindings.text(mode ?? 'development'),
+        NODE_ENV: bindings.text(mode ?? "development"),
         IMAGES: bindings.images(),
         // preview deploy 会忽略 secret
         SYNC_TOKEN: bindings.secret(),
         GITHUB_TOKEN: bindings.secret(),
         BETTER_AUTH_SECRET: bindings.secret(),
         NEXT_PUBLIC_GAID: bindings.text(`G-ZJPDQWZKDS`),
-        BASE_URL: bindings.text(isProd ? `https://mdark.org`: mode === 'production' ? 'https://preview.mdark.org':`http://localhost:3000`),
+        BASE_URL: bindings.text(
+          isProd
+            ? `https://mdark.org`
+            : mode === "production"
+              ? "https://preview.mdark.org"
+              : `http://localhost:3000`,
+        ),
         GOOGLE_CLIENT_ID: bindings.secret(),
         GOOGLE_CLIENT_SECRET: bindings.secret(),
         ALGOLIA_APP_ID: bindings.secret(),
         ALGOLIA_SECRET_API_KEY: bindings.secret(),
       },
     }),
-}
-
+  };
 });

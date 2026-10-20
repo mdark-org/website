@@ -1,31 +1,32 @@
 import { createDB, DB } from "@repo/source";
-import {Hono} from "hono";
-import {env} from 'cloudflare:workers'
-import {searchRoute} from "@/api/routes/search.ts";
-import {sync} from "../api/routes/sync.ts";
-import {createAuth} from "@/lib/auth.ts";
-import {uploadHandler} from "@/lib/uploadthing.ts";
+import { Hono } from "hono";
+import { env } from "cloudflare:workers";
+import { searchRoute } from "@/api/routes/search.ts";
+import { sync } from "../api/routes/sync.ts";
+import { createAuth } from "@/lib/auth.ts";
+import { uploadHandler } from "@/lib/uploadthing.ts";
+import { createComments } from "@/lib/comments.server";
 
-declare module 'hono' {
+declare module "hono" {
   interface ContextVariableMap {
-    db: DB
-    AI_SEARCH: AiSearchNamespace
+    db: DB;
+    AI_SEARCH: AiSearchNamespace;
   }
 }
 
-
-const app = new Hono().basePath('/api');
+const app = new Hono().basePath("/api");
 
 app.use(async (c, next) => {
-  c.set('db', createDB(env.DB))
+  c.set("db", createDB(env.DB));
   await next();
-})
+});
 
 app.on(["POST", "GET"], "/auth/*", (c) => {
   return createAuth().handler(c.req.raw);
 });
-app.route('/', searchRoute)
-app.route('/', sync)
-app.all("/api/uploadthing", (context) => uploadHandler(context.req.raw));
+app.route("/", searchRoute);
+app.all("/comments/*", (context) => createComments().fetch(context.req.raw));
+app.all("/uploadthing", (context) => uploadHandler(context.req.raw));
+app.route("/", sync);
 
 export default app;
