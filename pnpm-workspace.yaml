@@ -10,15 +10,15 @@ allowBuilds:
   workerd: true
 
 catalog:
-  vite: npm:@voidzero-dev/vite-plus-core@1.1.0
-  vite-plus: 1.1.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.3.0
+  vite-plus: 1.3.0
   vitest: 5.0.3
   zod: ^4
   typescript: ^7
   "@types/node": ^24
-  "cf": "^1.0.0-beta.13"
+  "cf": latest
   "@cloudflare/vitest-plugin": "^1.4.0"
-  "@cloudflare/vite-plugin": "2.0.0-beta.sha-91c870c02"
+  "@cloudflare/vite-plugin": "beta"
   "@cloudflare/workers-types": latest
 catalogs:
   react:
@@ -30,7 +30,7 @@ catalogs:
     drizzle-kit: ^1.0.0-rc.4
     drizzle-orm: 1.0.0-rc.4
   hono:
-    hono: ^4.12.18
+    hono: latest
   tailwindcss:
     "tailwindcss": "^4.3.3"
     "@tailwindcss/vite": "^4.3.3"
@@ -50,8 +50,8 @@ minimumReleaseAgeExclude:
   - "@typescript/typescript-win32-x64@7.1.0-dev.20261002.1"
   - typescript@7.1.0-dev.20261002.1
   - vite@8.3.3
+  - cf@1.0.0-beta.20
 patchedDependencies:
-  "@fuma-comment/server": patches/@fuma-comment__server.patch
   fumadocs-core: patches/fumadocs-core.patch
 
 overrides:

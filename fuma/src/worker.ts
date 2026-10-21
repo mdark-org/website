@@ -1,5 +1,6 @@
-export { default } from "vinext/server/fetch-handler";
-export * from "vinext/server/fetch-handler";
+import handler from "@tanstack/react-start/server-entry";
+
+export default { fetch: handler.fetch };
 export { SourceSyncWorkflow } from "./api/workflows/sync.workflow.ts";
 export { IndexWorkflow } from "./api/workflows/index.workflow.ts";
 
@@ -14,8 +15,8 @@ interface ENV {
   SYNC_TOKEN?: string;
   GITHUB_TOKEN?: string;
   BASE_URL: string;
-  GOOGLE_CLIENT_ID: string
-  GOOGLE_CLIENT_SECRET: string
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
   ALGOLIA_APP_ID: string;
   ALGOLIA_SECRET_API_KEY: string;
 }
@@ -24,4 +25,4 @@ declare global {
     interface Env extends ENV {}
   }
 }
-export type Env = ENV
+export type Env = ENV;

@@ -1,5 +1,8 @@
 /dist/
 .vinext/
 .cloudflare/
-
+.wrangler
+.tanstack
 .dev.vars
+dist
+node_modules
