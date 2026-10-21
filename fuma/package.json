@@ -18,6 +18,7 @@
     "build": "vp build --mode=production"
   },
   "dependencies": {
+    "@algolia/requester-fetch": "^5.60.0",
     "@base-ui/react": "^1.8.0",
     "@better-auth/drizzle-adapter": "^1.7.7",
     "@fontsource/inter": "^5.2.8",

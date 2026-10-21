@@ -6,6 +6,7 @@ import {liteClient} from "algoliasearch/lite";
 import {algoliaClient} from "fumadocs-core/search/client/algolia";
 import {config} from "@/config";
 
+import { createFetchRequester } from '@algolia/requester-fetch'
 export const searchRoute = new Hono()
 searchRoute.get('/search', async (c) => {
   c.header('Cache-Control', 'no-store')
@@ -56,7 +57,9 @@ searchRoute.get('/search/algolia', async (c) => {
     if (!published?.syncRunId || !published.searchSlot) return c.json([])
 
     const searchClient = algoliaClient({
-      client: liteClient(env.ALGOLIA_APP_ID, env.ALGOLIA_SECRET_API_KEY),
+      client: liteClient(env.ALGOLIA_APP_ID, env.ALGOLIA_SECRET_API_KEY, {
+        requester: createFetchRequester(),
+      }),
       indexName: published.searchSlot,
       tag,
     })
