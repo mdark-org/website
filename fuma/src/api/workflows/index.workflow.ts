@@ -10,10 +10,12 @@ export class IndexWorkflow extends WorkflowEntrypoint<Env, SyncParams> {
     const db = createDB(this.env.DB)
     const runRepo = new SyncRunRepo(db)
     const nodeEnv = this.env.NODE_ENV
-    const slot = await step.do('get-search-slot', async () => {
-      const head = await runRepo.getHead()
-      return head?.searchSlot === `mdark-algolia-${nodeEnv}-a` ? `mdark-algolia-${nodeEnv}-b` : `mdark-algolia-${nodeEnv}-a`
-    })
+
+    // 单索引就地更新：不再 A/B 切换，而是把本次 run 的差量写入当前索引。
+    // 差量由 manifest（索引当前内容）与本次 run 的内容对比得出，写索引的同时原地推进 manifest。
+    // head 在 sync 完成时已经前进，这里只负责让索引追平。
+    const slot = await step.do('get-search-slot', () =>
+      runRepo.getIndexSlot(`mdark-algolia-${nodeEnv}-a`))
 
     const adapter = new AlgoliaV2SearchAdapter({
       appId: this.env.ALGOLIA_APP_ID,
@@ -35,9 +37,7 @@ export class IndexWorkflow extends WorkflowEntrypoint<Env, SyncParams> {
     }, () => uploadToAISearchV2({
       searchAdapter: adapter,
       bucket: this.env.SEARCH_MANIFESTS,
-      status: { syncRunId: runId, slot: slot }
+      status: { syncRunId: runId, slot },
     }))
-
-    await step.do('publish-run', () => runRepo.publishRun(runId, slot))
   }
 }

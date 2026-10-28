@@ -38,8 +38,22 @@ export class SyncRunRepo {
   async getHead() {
     return await this.db.select().from(sourceHeads).where(eq(sourceHeads.id, SOURCE_HEAD_ID)).get() ?? null
   }
+
+  /**
+   * The index a run must write. Indexing no longer alternates between A/B slots:
+   * every run applies its diff to the published index, so the name never rotates.
+   */
+  async getIndexSlot(fallbackSlot: string): Promise<string> {
+    const head = await this.getHead()
+    return head?.searchSlot ?? fallbackSlot
+  }
+
+  /**
+   * Commits a run once its content is synced. This is the point where the head
+   * advances and the content becomes publicly readable; the search index catches
+   * up afterwards.
+   */
   async publishRun(runId: number, slot: string) {
-    const run = (await this.getRun(runId))!
     const now = new Date()
     await this.db.insert(sourceHeads).values({
       id: SOURCE_HEAD_ID,
@@ -50,7 +64,6 @@ export class SyncRunRepo {
       .onConflictDoUpdate({
         target: sourceHeads.id,
         set: { syncRunId: runId, searchSlot: slot, publishedAt: now },
-        setWhere: run.baseRunId === null ? sql`0` : eq(sourceHeads.syncRunId, run.baseRunId),
       })
     await this.db.update(syncRun).set({ status: 'succeeded', finishedAt: now, error: null })
       .where(and(eq(syncRun.id, runId), eq(syncRun.status, 'running')))
