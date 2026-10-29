@@ -5,9 +5,7 @@ export default defineConfig(({ mode, isPreview }) => {
   const isProd = !isPreview && mode === "production";
   const name = isProd ? "mdark" : "mdark-dev";
   // preview env 需要显式提供 dbId，否则 d1 binding 会被忽略
-  const dbId =
-    process.env.CLOUDFLARE_D1_DATABASE_ID ??
-    (!isProd ? "8e3e8697-7153-472c-97b5-9e7c1ef352c2" : undefined);
+  const dbId = (!isProd ? "8e3e8697-7153-472c-97b5-9e7c1ef352c2" : "b064e2bf-7210-41dd-90f1-be5b4bf8b864");
 
   return {
     worker: defineWorker({
@@ -43,7 +41,7 @@ export default defineConfig(({ mode, isPreview }) => {
         }),
       },
       env: {
-        DB: bindings.d1({ name: name, id: dbId }),
+        DB: bindings.d1({  id: dbId }),
         AI_SEARCH: bindings.aiSearchNamespace({ namespace: "mdark", dev: { remote: true } }),
         SEARCH_MANIFESTS: bindings.r2({ name: `${name}-search-manifests` }),
         SYNC_WORKFLOW: bindings.workflow({
