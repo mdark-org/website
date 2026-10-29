@@ -1,6 +1,23 @@
 import handler from "@tanstack/react-start/server-entry";
+import { createDB, SyncRunRepo } from "@repo/source";
+import { datasources, devDatasource } from "./datasource";
 
-export default { fetch: handler.fetch };
+export default {
+  fetch: handler.fetch,
+  async scheduled(_controller: ScheduledController, env: Env) {
+    const repo = new SyncRunRepo(createDB(env.DB));
+    const ds = env.NODE_ENV === "production" ? datasources : devDatasource;
+    const run = await repo.createRun(ds.map((source) => source.id));
+    const workflowId = `sync-${env.NODE_ENV}-${run.id}`;
+    try {
+      await env.SYNC_WORKFLOW.create({ id: workflowId, params: { runId: run.id } });
+    } catch (error) {
+      await repo.failRun(run.id, error);
+      throw error;
+    }
+    console.log("Scheduled sync queued", { runId: run.id, workflowId });
+  },
+};
 export { SourceSyncWorkflow } from "./api/workflows/sync.workflow.ts";
 export { IndexWorkflow } from "./api/workflows/index.workflow.ts";
 

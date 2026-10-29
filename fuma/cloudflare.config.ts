@@ -1,4 +1,4 @@
-import { bindings, defineConfig, defineWorker, exports as workerExports } from "cf/config";
+import { bindings, defineConfig, defineWorker, exports as workerExports, triggers } from "cf/config";
 
 export default defineConfig(({ mode, isPreview }) => {
   console.log(`build ctx: mode:${mode}, preview:${isPreview}`);
@@ -14,6 +14,7 @@ export default defineConfig(({ mode, isPreview }) => {
       previewUrls: true,
       name: name,
       entrypoint: "./src/worker.ts",
+      triggers: isProd ? [triggers.scheduled({ schedule: "7 * * * *" })] : [],
       limits: { cpuMs: 300_000, subrequests: 100_000 },
       compatibilityDate: "2026-09-30",
       compatibilityFlags: ["nodejs_compat"],

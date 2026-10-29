@@ -44,6 +44,13 @@ The application renders D1 content on demand. The Vinext response-store
 integration and Next.js ISR settings are removed. No content is fetched from
 D1 at build time, and no document prerendering is configured.
 
+Production deployments configure an hourly Cron Trigger (`7 * * * *`, at minute 7
+of every hour in UTC). The scheduled handler creates a sync run and starts the
+existing full-sync Workflow, which publishes content and then updates the search
+index. Development and preview deployments do not configure a schedule. The
+schedule takes effect after production deployment; Cloudflare may take up to
+15 minutes to propagate Cron Trigger changes.
+
 ## References
 
 - [Fumadocs with TanStack Start](https://www.fumadocs.dev/docs/manual-installation/tanstack-start)
