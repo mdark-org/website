@@ -15,7 +15,7 @@ export class IndexWorkflow extends WorkflowEntrypoint<Env, SyncParams> {
     // 差量由 manifest（索引当前内容）与本次 run 的内容对比得出，写索引的同时原地推进 manifest。
     // head 在 sync 完成时已经前进，这里只负责让索引追平。
     const slot = await step.do('get-search-slot', () =>
-      runRepo.getIndexSlot(`mdark-algolia-${nodeEnv}-a`))
+      runRepo.getIndexSlot(`mdark-algolia-${nodeEnv}`))
 
     const adapter = new AlgoliaV2SearchAdapter({
       appId: this.env.ALGOLIA_APP_ID,

@@ -46,7 +46,7 @@ export class SourceSyncWorkflow extends WorkflowEntrypoint<Env, SyncParams> {
     // 内容同步完成即提交：head 前进，全站开始提供这个 run 的内容。
     // 搜索索引随后追平，因此中间态是「内容已上线、索引里还是旧的部分」，可以接受。
     await step.do('trigger-index-workflow', async () => {
-      const slot = await runRepo.getIndexSlot(`mdark-algolia-${this.env.NODE_ENV}-a`)
+      const slot = await runRepo.getIndexSlot(`mdark-algolia-${this.env.NODE_ENV}`)
       await runRepo.publishRun(runId, slot)
       await this.env.INDEX_WORKFLOW.create({
         id: `index-sync-run-${this.env.NODE_ENV}-${runId}`,
