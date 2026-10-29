@@ -31,8 +31,16 @@ export default defineConfig(({ mode, isPreview }) => {
         headSamplingRate: 1,
       },
       exports: {
-        SourceSyncWorkflow: workerExports.workflow({ name: `${name}-sync` }),
-        IndexWorkflow: workerExports.workflow({ name: `${name}-search-indexer` }),
+        // 两个 workflow 都串行：sync 串行保证 base→head 链式推进；
+        // 索引串行保证同一时刻只有一个 run 在推进同一个索引的 manifest。
+        SourceSyncWorkflow: workerExports.workflow({
+          name: `${name}-sync`,
+          concurrency: { limit: 1 },
+        }),
+        IndexWorkflow: workerExports.workflow({
+          name: `${name}-search-indexer`,
+          concurrency: { limit: 1 },
+        }),
       },
       env: {
         DB: bindings.d1({ name: name, id: dbId }),
