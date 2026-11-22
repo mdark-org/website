@@ -5,7 +5,7 @@ export default defineConfig(({ mode, isPreview }) => {
   const isProd = !isPreview && mode === "production";
   const name = isProd ? "mdark" : "mdark-dev";
   // preview env 需要显式提供 dbId，否则 d1 binding 会被忽略
-  const dbId = (!isProd ? "bd1cb192-f494-43c0-a1e7-4ba3528935f8" : "b064e2bf-7210-41dd-90f1-be5b4bf8b864");
+  const dbId = (!isProd ? "bd1cb192-f494-43c0-a1e7-4ba3528935f8" : "bd1cb192-f494-43c0-a1e7-4ba3528935f8");
 
   return {
     worker: defineWorker({
