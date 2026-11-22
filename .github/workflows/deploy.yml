@@ -71,6 +71,8 @@ jobs:
           write(`.env.${environment}`, { ...vars, ...secrets });
           write(`.secret.${environment}`, secrets);
           NODE
+      - name: whoami
+        run: pnpm run whoami
       - name: migrate db
         run: pnpm run migrate:${{ env.DEPLOY_ENV }}
         working-directory: fuma

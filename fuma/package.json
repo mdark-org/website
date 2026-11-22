@@ -15,6 +15,7 @@
     "deploy:development": "pnpm run build:preview && cf deploy --prebuilt --mode=development --secrets-file=.secret.development",
     "deploy:production": "pnpm run build && cf deploy --prebuilt --mode=production --secrets-file=.secret.production",
     "dev": "vp dev --mode=development",
+    "whoami": "cf auth whoami",
     "build": "vp build --mode=production"
   },
   "dependencies": {
