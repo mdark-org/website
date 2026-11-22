@@ -51,7 +51,7 @@
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
-    "shiki": "^3.11.0",
+    "shiki": "^4.6.0",
     "tailwind-merge": "^3.4.0",
     "unified": "^11.0.5",
     "uploadthing": "^7.7.4",
@@ -59,7 +59,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "2.0.0-beta.sha-ad79608dd",
+    "@cloudflare/vite-plugin": "catalog:",
     "@cloudflare/workers-types": "catalog:",
     "@tailwindcss/vite": "^4.3.3",
     "@types/micromatch": "^4.0.10",
