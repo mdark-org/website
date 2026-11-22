@@ -2,7 +2,9 @@
   "name": "@mdark/website",
   "version": "1.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "whoami": "cf auth whoami"
+  },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "catalog:",
     "@types/node": "catalog:",
