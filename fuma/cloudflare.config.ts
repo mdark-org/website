@@ -5,11 +5,11 @@ export default defineConfig(({ mode, isPreview }) => {
   const isProd = !isPreview && mode === "production";
   const name = isProd ? "mdark" : "mdark-dev";
   // preview env 需要显式提供 dbId，否则 d1 binding 会被忽略
-  const dbId = (!isProd ? "8e3e8697-7153-472c-97b5-9e7c1ef352c2" : "b064e2bf-7210-41dd-90f1-be5b4bf8b864");
+  const dbId = (!isProd ? "bd1cb192-f494-43c0-a1e7-4ba3528935f8" : "b064e2bf-7210-41dd-90f1-be5b4bf8b864");
 
   return {
     worker: defineWorker({
-      domains: isProd ? ["prod.mdark.org", "mdark.org"] : ["preview.mdark.org"],
+      domains: isProd ? ["prod.koft.dev"] : ["preview.koft.dev"],
       workersDev: !isProd,
       previewUrls: true,
       name: name,
