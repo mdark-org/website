@@ -37,7 +37,9 @@ export const pageRef = sqliteTable('page_ref', {
   url: text('url').notNull(),
   publishedAt: integer('published_at', { mode: 'timestamp' }).notNull().defaultNow(),
 }, (t) => [
-  index('page_ref_date_url').on(t.publishedAt, t.url, t.syncRunId),
+  // One ref per page per run. Reads always resolve the current head run, so
+  // this index serves both the run lookup and the exact (run, url) lookup.
+  uniqueIndex('page_ref_run_url').on(t.syncRunId, t.url),
 ])
 
 

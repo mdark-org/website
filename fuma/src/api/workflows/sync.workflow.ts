@@ -53,6 +53,15 @@ export class SourceSyncWorkflow extends WorkflowEntrypoint<Env, SyncParams> {
         params: { runId }
       })
     })
+
+    // 清理是尽力而为：内容已经发布，清理失败不应把 run 标记为失败。
+    await step.do('prune-old-runs', async () => {
+      try {
+        await runRepo.pruneRuns()
+      } catch (error) {
+        console.error('prune-old-runs failed', error)
+      }
+    })
     return { runId, status: 'succeeded', pages: results.reduce((count, result) => count + result.pages, 0) }
   }
 }

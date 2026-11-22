@@ -1,5 +1,6 @@
-import { sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { DatasourceInfo, Folder, Page, PageWithContent } from '../types'
+import { sourceHeads } from './schema'
 import type { DB, pageContent, pageRef, pageRevision } from './schema'
 
 export interface ListPagesQuery {
@@ -18,7 +19,7 @@ export interface ISourceReadRepo {
   listPages(query?: ListPagesQuery, options?: { content?: boolean }): Promise<PageWithContent[]>
 }
 
-const currentRun = { sourceHead: { id: 'current' } }
+const SOURCE_HEAD_ID = 'current'
 const datasourceColumns = { id: true, slug: true, name: true, description: true, icon: true, mountedPath: true, sortOrder: true } as const
 const pageColumns = { url: true, datasourceId: true } as const
 const revisionColumns = { revisionId: true, title: true, description: true, tags: true, metadata: true, filename: true, ext: true, publishedAt: true } as const
@@ -58,44 +59,62 @@ export class SourceReadRepo implements ISourceReadRepo {
     this.db = db
   }
 
+  private async currentSyncRunId(): Promise<number | null> {
+    const head = await this.db.select({ syncRunId: sourceHeads.syncRunId })
+      .from(sourceHeads)
+      .where(eq(sourceHeads.id, SOURCE_HEAD_ID))
+      .get()
+    return head?.syncRunId ?? null
+  }
+
   async listDatasource(): Promise<DatasourceInfo[]> {
+    const syncRunId = await this.currentSyncRunId()
+    if (syncRunId === null) return []
     return this.db.query.datasource.findMany({
       columns: datasourceColumns,
-      where: { syncRun: currentRun },
+      where: { syncRunId },
       orderBy: { sortOrder: 'asc', id: 'asc' },
     })
   }
 
   async getDatasource(idOrSlug: number | string): Promise<DatasourceInfo | null> {
+    const syncRunId = await this.currentSyncRunId()
+    if (syncRunId === null) return null
     return await this.db.query.datasource.findFirst({
       columns: datasourceColumns,
-      where: { ...(typeof idOrSlug === 'number' ? { id: idOrSlug } : { slug: idOrSlug }), syncRun: currentRun },
+      where: { ...(typeof idOrSlug === 'number' ? { id: idOrSlug } : { slug: idOrSlug }), syncRunId },
       orderBy: { sortOrder: 'asc', id: 'asc' },
     }) ?? null
   }
 
   async getPageTree(datasourceId: number): Promise<Folder | null> {
+    const syncRunId = await this.currentSyncRunId()
+    if (syncRunId === null) return null
     const row = await this.db.query.datasource.findFirst({
       columns: { tree: true, syncRunId: true },
-      where: { id: datasourceId, syncRun: currentRun },
+      where: { id: datasourceId, syncRunId },
     })
     return row?.tree ? { ...row.tree, $id: `datasource:${datasourceId}:run:${row.syncRunId}` } : null
   }
 
   async getPage(url: string, options: { content?: boolean } = {}): Promise<Page | null> {
+    const syncRunId = await this.currentSyncRunId()
+    if (syncRunId === null) return null
     const ref = await this.db.query.pageRef.findFirst({
       columns: { url: true, datasourceId: true },
-      where: { url, syncRun: currentRun },
+      where: { url, syncRunId },
       with: { revision: { columns: revisionColumns, with: { content: options.content ? { columns: { markdown: true } } : false } } },
     })
     return ref ? toPage(ref) : null
   }
 
   async listPages(query: ListPagesQuery = {}, options: { content?: boolean } = {}): Promise<Page[]> {
+    const syncRunId = await this.currentSyncRunId()
+    if (syncRunId === null) return []
     const refs = await this.db.query.pageRef.findMany({
       columns: { url: true, datasourceId: true },
       where: {
-        syncRun: currentRun,
+        syncRunId,
         datasourceId: query.datasourceId,
         revision: query.rss ? { RAW: (revision) => sql`coalesce(json_extract(${revision.metadata}, '$.rss'), 1) = 1` } : undefined,
       },

@@ -1,8 +1,11 @@
 
-import { and, eq, inArray, sql } from 'drizzle-orm'
+import { and, eq, inArray, lt, sql } from 'drizzle-orm'
 import { type DB, pageRef, datasource, sourceHeads, syncRun } from './schema'
 
 export const SOURCE_HEAD_ID = 'current'
+
+/** Head plus predecessors: enough for any still-running index workflow. */
+export const RETAIN_RUNS = 8
 
 export class SourceSyncError extends Error {
   override name = 'SourceSyncError'
@@ -37,6 +40,21 @@ export class SyncRunRepo {
 
   async getHead() {
     return await this.db.select().from(sourceHeads).where(eq(sourceHeads.id, SOURCE_HEAD_ID)).get() ?? null
+  }
+
+  /**
+   * Drops page refs and datasource snapshots that no read path can reach.
+   * Public reads serve only the head run; older runs stay briefly so an
+   * in-flight index workflow can finish against its own snapshot.
+   */
+  async pruneRuns(retain: number = RETAIN_RUNS): Promise<void> {
+    const head = await this.getHead()
+    if (!head?.syncRunId) return
+    const cutoff = head.syncRunId - (retain - 1)
+    await this.db.batch([
+      this.db.delete(pageRef).where(lt(pageRef.syncRunId, cutoff)),
+      this.db.delete(datasource).where(lt(datasource.syncRunId, cutoff)),
+    ])
   }
 
   /**
