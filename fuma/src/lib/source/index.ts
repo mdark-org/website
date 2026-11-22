@@ -83,12 +83,12 @@ export function createSource(reader: ISourceReadRepo) {
 
 export type Source = ReturnType<typeof createSource>;
 
-let instance: Source | undefined;
-
 import { env } from "cloudflare:workers";
-import { SourceReadRepo, createDB } from "@repo/source";
+import { SourceReadRepo } from "@repo/source";
+import { createSourceDB } from "@/lib/db/db";
 
+// Hyperdrive clients must be created per request, never cached in global scope.
 export const source: Source = new Proxy({} as Source, {
   get: (_target, prop) =>
-    Reflect.get((instance ??= createSource(new SourceReadRepo(createDB(env.DB)))), prop),
+    Reflect.get(createSource(new SourceReadRepo(createSourceDB(env))), prop),
 });

@@ -1,13 +1,17 @@
 import { betterAuth } from "better-auth";
-import * as table from './db/d1'
-import { drizzleAdapter } from '@better-auth/drizzle-adapter/relations-v2';
-import {createDB} from "./db/db";
-import {env} from 'cloudflare:workers'
+import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
+import { env } from "cloudflare:workers";
+import * as d1Table from "./db/d1";
+import * as pgTable from "./db/pg";
+import { createDB, getDbBackend } from "./db/db";
+
 export const createAuth = () => {
-  const db = createDB()
+  const backend = getDbBackend();
+  const db = createDB();
+  const table = backend === "d1" ? d1Table : pgTable;
   return betterAuth({
     database: drizzleAdapter(db, {
-      provider: 'sqlite',
+      provider: backend === "d1" ? "sqlite" : "pg",
       schema: {
         verifications: table.verifications,
         users: table.users,
@@ -22,5 +26,5 @@ export const createAuth = () => {
         clientSecret: env.GOOGLE_CLIENT_SECRET as string,
       },
     },
-  })
-}
+  });
+};

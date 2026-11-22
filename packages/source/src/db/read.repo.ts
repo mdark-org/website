@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm'
 import { DatasourceInfo, Folder, Page, PageWithContent } from '../types'
-import { sourceHeads } from './schema'
+import { asSourceDb, type SourceDatabase, type SourceDbInput } from './index'
 import type { DB, pageContent, pageRef, pageRevision } from './schema'
 
 export interface ListPagesQuery {
@@ -53,17 +53,20 @@ function toPage(ref: ReadPage): PageWithContent {
 }
 
 export class SourceReadRepo implements ISourceReadRepo {
+  private readonly ctx: SourceDatabase
   private readonly db: DB
 
-  constructor(db: DB) {
-    this.db = db
+  constructor(input: SourceDbInput) {
+    this.ctx = asSourceDb(input)
+    this.db = this.ctx.db
   }
 
   private async currentSyncRunId(): Promise<number | null> {
-    const head = await this.db.select({ syncRunId: sourceHeads.syncRunId })
+    const { sourceHeads } = this.ctx.tables
+    const [head] = await this.db.select({ syncRunId: sourceHeads.syncRunId })
       .from(sourceHeads)
       .where(eq(sourceHeads.id, SOURCE_HEAD_ID))
-      .get()
+      .limit(1)
     return head?.syncRunId ?? null
   }
 
@@ -116,7 +119,14 @@ export class SourceReadRepo implements ISourceReadRepo {
       where: {
         syncRunId,
         datasourceId: query.datasourceId,
-        revision: query.rss ? { RAW: (revision) => sql`coalesce(json_extract(${revision.metadata}, '$.rss'), 1) = 1` } : undefined,
+        revision: query.rss
+          ? {
+              RAW: (revision) =>
+                this.ctx.backend === 'pg'
+                  ? sql`coalesce(${revision.metadata}->>'rss', 'true') not in ('false', '0')`
+                  : sql`coalesce(json_extract(${revision.metadata}, '$.rss'), 1) = 1`,
+            }
+          : undefined,
       },
       with: { revision: { columns: revisionColumns, with: { content: options.content ? { columns: { markdown: true } } : false } } },
       orderBy: { publishedAt: 'desc', url: 'desc' },

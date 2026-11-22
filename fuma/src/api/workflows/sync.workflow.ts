@@ -3,7 +3,7 @@ import { NonRetryableError } from 'cloudflare:workflows'
 import { SourceSyncError, SourceWriteRepo, syncDatasource } from '@repo/source/sync'
 import { datasources, devDatasource } from '@/datasource'
 import type { Env, SyncParams } from '@/worker'
-import { createDB } from '@repo/source'
+import { createSourceDB } from '@/lib/db/db'
 import { SyncRunRepo } from "@repo/source/sync";
 
 async function stopOnSyncError<T>(operation: () => Promise<T>): Promise<T> {
@@ -18,7 +18,7 @@ async function stopOnSyncError<T>(operation: () => Promise<T>): Promise<T> {
 export class SourceSyncWorkflow extends WorkflowEntrypoint<Env, SyncParams> {
   async run(event: WorkflowEvent<SyncParams>, step: WorkflowStep) {
     const runId = event.payload.runId
-    const db = createDB(this.env.DB)
+    const db = createSourceDB(this.env)
     const repo = new SourceWriteRepo(db)
     const runRepo = new SyncRunRepo(db)
     const ds = this.env.NODE_ENV === 'production' ? datasources : devDatasource

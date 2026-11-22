@@ -76,6 +76,12 @@ jobs:
       - name: migrate db
         run: pnpm run migrate:${{ env.DEPLOY_ENV }}
         working-directory: fuma
+      - name: migrate pg
+        if: ${{ secrets.DATABASE_URL != '' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm run migrate:pg
+        working-directory: fuma
       - name: deploy to cloudflare worker
         run: pnpm run deploy:${{ env.DEPLOY_ENV }}
         working-directory: fuma

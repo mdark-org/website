@@ -42,7 +42,12 @@ export default defineConfig(({ mode, isPreview }) => {
         }),
       },
       env: {
-        DB: bindings.d1({  id: dbId }),
+        DB: bindings.d1({ id: dbId }),
+        DB_BACKEND: bindings.text(process.env.DB_BACKEND === "d1" ? "d1" : "pg"),
+        HYPERDRIVE: bindings.hyperdrive({
+          id: "1a93ae832a84450bb76f3f979f78a697",
+          ...(process.env.DATABASE_URL ? { dev: { connectionString: process.env.DATABASE_URL } } : {}),
+        }),
         AI_SEARCH: bindings.aiSearchNamespace({ namespace: "mdark", dev: { remote: true } }),
         SEARCH_MANIFESTS: bindings.r2({ name: `${name}-search-manifests` }),
         SYNC_WORKFLOW: bindings.workflow({

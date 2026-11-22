@@ -1,8 +1,7 @@
 import { and, eq, inArray } from 'drizzle-orm'
-import {datasource, pageContent, pageRef, pageRevision, pageSection} from './schema'
-import { sourceHeads } from './schema'
+import { asSourceDb, type SourceDatabase, type SourceDbInput } from './index'
 import type { DB } from './schema'
-import { chunkD1Columns } from '../utils/chunk'
+import { chunk, chunkD1Columns } from '../utils/chunk'
 
 export interface PublishedSearch {
   syncRunId: number | null
@@ -21,21 +20,25 @@ export interface SearchSectionResult {
 }
 
 export class SearchReadRepo {
+  private readonly ctx: SourceDatabase
   private readonly db: DB
 
-  constructor(db: DB) {
-    this.db = db
+  constructor(input: SourceDbInput) {
+    this.ctx = asSourceDb(input)
+    this.db = this.ctx.db
   }
 
   async getPublishedSearch(): Promise<PublishedSearch | null> {
-    const head = await this.db.select({ syncRunId: sourceHeads.syncRunId, slot: sourceHeads.searchSlot })
-      .from(sourceHeads).where(eq(sourceHeads.id, 'current')).get()
+    const { sourceHeads } = this.ctx.tables
+    const [head] = await this.db.select({ syncRunId: sourceHeads.syncRunId, slot: sourceHeads.searchSlot })
+      .from(sourceHeads).where(eq(sourceHeads.id, 'current')).limit(1)
     if (!head?.slot) return null
     return { syncRunId: head.syncRunId, slot: head.slot }
   }
 
   async resolveSections(syncRunId: number, ids: number[]): Promise<SearchSectionResult[]> {
     if (ids.length === 0) return []
+    const { pageRef, pageRevision, pageSection } = this.ctx.tables
     const rows: SearchSectionResult[] = await this.db.select({
       id: pageSection.id,
       revisionId: pageSection.revisionId,
@@ -54,8 +57,8 @@ export class SearchReadRepo {
     return rows
   }
 
-
   async listSearchSectionKeys(runId: number) {
+    const { pageRef, pageSection } = this.ctx.tables
     return this.db.select({ sectionId: pageSection.id, revisionId: pageSection.revisionId })
       .from(pageRef)
       .innerJoin(pageSection, eq(pageSection.revisionId, pageRef.revisionId))
@@ -63,13 +66,16 @@ export class SearchReadRepo {
   }
 
   async listSearchFiles(runId: number) {
+    const { pageRef } = this.ctx.tables
     return this.db.select({ revisionId: pageRef.revisionId })
       .from(pageRef)
       .where(eq(pageRef.syncRunId, runId))
   }
 
   async getSearchFiles(runId: number, fileHashes: string[]) {
-    const groups = chunkD1Columns([...new Set(fileHashes)], 1)
+    const { datasource, pageContent, pageRef, pageRevision } = this.ctx.tables
+    const unique = [...new Set(fileHashes)]
+    const groups = this.ctx.backend === 'd1' ? chunkD1Columns(unique, 1) : chunk(unique, 500)
     const rows = await Promise.all(groups.map((group) => {
       return this.db.select({
         revisionId: pageRevision.revisionId,
@@ -90,6 +96,7 @@ export class SearchReadRepo {
   }
 
   async getSearchSections(runId: number, sectionIds: number[]) {
+    const { datasource, pageRef, pageRevision, pageSection } = this.ctx.tables
     return this.db.select({
       id: pageSection.id,
       revisionId: pageSection.revisionId,
@@ -106,5 +113,4 @@ export class SearchReadRepo {
       .innerJoin(datasource, and(eq(datasource.id, pageRef.datasourceId), eq(datasource.syncRunId, pageRef.syncRunId)))
       .where(and(eq(pageRef.syncRunId, runId), inArray(pageSection.id, sectionIds)))
   }
-
 }

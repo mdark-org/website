@@ -1,13 +1,14 @@
 
 import { WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from "cloudflare:workers";
-import {createDB, SyncRunRepo} from "@repo/source";
-import {AlgoliaV2SearchAdapter, SearchReadRepo, uploadToAISearchV2} from "@repo/source/search";
+import { SyncRunRepo } from "@repo/source";
+import { AlgoliaV2SearchAdapter, SearchReadRepo, uploadToAISearchV2 } from "@repo/source/search";
 import type { Env, SyncParams } from "@/worker";
+import { createSourceDB } from "@/lib/db/db";
 
 export class IndexWorkflow extends WorkflowEntrypoint<Env, SyncParams> {
   async run(event: WorkflowEvent<SyncParams>, step: WorkflowStep) {
     const runId = event.payload.runId;
-    const db = createDB(this.env.DB)
+    const db = createSourceDB(this.env)
     const runRepo = new SyncRunRepo(db)
     const nodeEnv = this.env.NODE_ENV
 

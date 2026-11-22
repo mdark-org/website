@@ -17,27 +17,28 @@
     "./sync": "./src/sync/index.ts"
   },
   "dependencies": {
-    "feed": "^5.2.1",
-    "unstorage": "1.17.5",
+    "algoliasearch": "^5.59.0",
     "any-date-parser": "^2.2.3",
     "drizzle-orm": "catalog:drizzle",
+    "feed": "^5.2.1",
     "fumadocs-core": "catalog:fumadocs",
+    "gray-matter": "^4.0.3",
+    "micromatch": "^4.0.8",
     "p-limit": "^7.3.3",
+    "postgres": "^4.1.1",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0",
+    "unstorage": "1.17.5",
     "vfile": "^6.0.3",
-    "gray-matter": "^4.0.3",
-    "zod": "catalog:",
     "xxhashjs": "^0.2.2",
-    "micromatch": "^4.0.8",
-    "algoliasearch": "^5.59.0"
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/xxhashjs": "^0.2.4",
+    "@cloudflare/workers-types": "latest",
     "@types/mdast": "^4.0.4",
     "@types/micromatch": "^4.0.9",
-    "@cloudflare/workers-types": "latest"
+    "@types/xxhashjs": "^0.2.4"
   }
 }

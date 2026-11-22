@@ -1,6 +1,6 @@
-
 import { and, eq, inArray, lt, sql } from 'drizzle-orm'
-import { type DB, pageRef, datasource, sourceHeads, syncRun } from './schema'
+import { asSourceDb, type SourceDatabase, type SourceDbInput } from './index'
+import type { DB, syncRun } from './schema'
 
 export const SOURCE_HEAD_ID = 'current'
 
@@ -12,15 +12,18 @@ export class SourceSyncError extends Error {
 }
 
 export type SyncRun = typeof syncRun.$inferSelect
+
 export class SyncRunRepo {
+  private readonly ctx: SourceDatabase
   private readonly db: DB
 
-  constructor(db: DB) {
-    this.db = db
+  constructor(input: SourceDbInput) {
+    this.ctx = asSourceDb(input)
+    this.db = this.ctx.db
   }
 
-
   async createRun(datasourceIds: string[]): Promise<SyncRun> {
+    const { sourceHeads, syncRun } = this.ctx.tables
     const [run] = await this.db.insert(syncRun).values({
       baseRunId: sql`(select ${sourceHeads.syncRunId} from ${sourceHeads} where ${sourceHeads.id} = ${SOURCE_HEAD_ID})`,
       datasourceIds,
@@ -30,16 +33,21 @@ export class SyncRunRepo {
   }
 
   async getRun(runId: number): Promise<SyncRun | null> {
-    return await this.db.select().from(syncRun).where(eq(syncRun.id, runId)).get() ?? null
+    const { syncRun } = this.ctx.tables
+    const [row] = await this.db.select().from(syncRun).where(eq(syncRun.id, runId)).limit(1)
+    return row ?? null
   }
 
   async startRun(runId: number): Promise<void> {
+    const { syncRun } = this.ctx.tables
     await this.db.update(syncRun).set({ status: 'running', startedAt: new Date() })
       .where(and(eq(syncRun.id, runId), eq(syncRun.status, 'queued')))
   }
 
   async getHead() {
-    return await this.db.select().from(sourceHeads).where(eq(sourceHeads.id, SOURCE_HEAD_ID)).get() ?? null
+    const { sourceHeads } = this.ctx.tables
+    const [row] = await this.db.select().from(sourceHeads).where(eq(sourceHeads.id, SOURCE_HEAD_ID)).limit(1)
+    return row ?? null
   }
 
   /**
@@ -48,13 +56,21 @@ export class SyncRunRepo {
    * in-flight index workflow can finish against its own snapshot.
    */
   async pruneRuns(retain: number = RETAIN_RUNS): Promise<void> {
+    const { datasource, pageRef } = this.ctx.tables
     const head = await this.getHead()
     if (!head?.syncRunId) return
     const cutoff = head.syncRunId - (retain - 1)
-    await this.db.batch([
-      this.db.delete(pageRef).where(lt(pageRef.syncRunId, cutoff)),
-      this.db.delete(datasource).where(lt(datasource.syncRunId, cutoff)),
-    ])
+    if (this.ctx.backend === 'd1') {
+      await this.db.batch([
+        this.db.delete(pageRef).where(lt(pageRef.syncRunId, cutoff)),
+        this.db.delete(datasource).where(lt(datasource.syncRunId, cutoff)),
+      ])
+      return
+    }
+    await this.db.transaction(async (tx) => {
+      await tx.delete(pageRef).where(lt(pageRef.syncRunId, cutoff))
+      await tx.delete(datasource).where(lt(datasource.syncRunId, cutoff))
+    })
   }
 
   /**
@@ -72,6 +88,7 @@ export class SyncRunRepo {
    * up afterwards.
    */
   async publishRun(runId: number, slot: string) {
+    const { sourceHeads, syncRun } = this.ctx.tables
     const now = new Date()
     await this.db.insert(sourceHeads).values({
       id: SOURCE_HEAD_ID,
@@ -88,6 +105,7 @@ export class SyncRunRepo {
   }
 
   async failRun(runId: number, error: unknown): Promise<void> {
+    const { syncRun } = this.ctx.tables
     const message = error instanceof Error ? error.message : String(error)
     await this.db.update(syncRun).set({ status: 'failed', finishedAt: new Date(), error: message })
       .where(and(eq(syncRun.id, runId), inArray(syncRun.status, ['queued', 'running'])))

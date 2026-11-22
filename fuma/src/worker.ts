@@ -1,11 +1,12 @@
 import handler from "@tanstack/react-start/server-entry";
-import { createDB, SyncRunRepo } from "@repo/source";
+import { SyncRunRepo } from "@repo/source";
+import { createSourceDB } from "./lib/db/db";
 import { datasources, devDatasource } from "./datasource";
 
 export default {
   fetch: handler.fetch,
   async scheduled(_controller: ScheduledController, env: Env) {
-    const repo = new SyncRunRepo(createDB(env.DB));
+    const repo = new SyncRunRepo(createSourceDB(env));
     const ds = env.NODE_ENV === "production" ? datasources : devDatasource;
     const run = await repo.createRun(ds.map((source) => source.id));
     const workflowId = `sync-${env.NODE_ENV}-${run.id}`;
@@ -24,6 +25,8 @@ export { IndexWorkflow } from "./api/workflows/index.workflow.ts";
 export type SyncParams = { runId: number };
 interface ENV {
   DB: D1Database;
+  DB_BACKEND?: "d1" | "pg";
+  HYPERDRIVE: Hyperdrive;
   NODE_ENV: string;
   SYNC_WORKFLOW: Workflow<{ runId: number }>;
   INDEX_WORKFLOW: Workflow<{ runId: number }>;

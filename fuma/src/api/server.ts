@@ -1,4 +1,4 @@
-import { createDB, DB } from "@repo/source";
+import type { SourceDatabase } from "@repo/source";
 import { Hono } from "hono";
 import { env } from "cloudflare:workers";
 import { searchRoute } from "@/api/routes/search.ts";
@@ -6,10 +6,11 @@ import { sync } from "../api/routes/sync.ts";
 import { createAuth } from "@/lib/auth.ts";
 import { uploadHandler } from "@/lib/uploadthing.ts";
 import { createComments } from "@/lib/comments.server";
+import { createSourceDB } from "@/lib/db/db";
 
 declare module "hono" {
   interface ContextVariableMap {
-    db: DB;
+    db: SourceDatabase;
     AI_SEARCH: AiSearchNamespace;
   }
 }
@@ -17,7 +18,7 @@ declare module "hono" {
 const app = new Hono().basePath("/api");
 
 app.use(async (c, next) => {
-  c.set("db", createDB(env.DB));
+  c.set("db", createSourceDB(env));
   await next();
 });
 
