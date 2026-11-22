@@ -14,10 +14,10 @@ catalog:
   vite-plus: 1.3.0
   vitest: 5.0.3
   zod: ^4
-  typescript: ^7
-  "@types/node": ^24
+  typescript: ^7.0.2
+  "@types/node": ^24.19.2
   "cf": latest
-  "@cloudflare/vitest-plugin": "^1.4.0"
+  "@cloudflare/vitest-plugin": ^1.9.0
   "@cloudflare/vite-plugin": "beta"
   "@cloudflare/workers-types": latest
 catalogs:
