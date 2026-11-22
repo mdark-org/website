@@ -9,7 +9,7 @@ export default defineConfig(({ mode, isPreview }) => {
 
   return {
     worker: defineWorker({
-      domains: isProd ? ["prod.koft.dev"] : ["preview.koft.dev"],
+      domains: isProd ? ["prod.mdark.org", "mdark.org"] : ["preview.mdark.org"],
       workersDev: !isProd,
       previewUrls: true,
       name: name,
