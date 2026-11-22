@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "whoami": "cf auth whoami"
+    "whoami": "cf auth scopes --all"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "catalog:",
