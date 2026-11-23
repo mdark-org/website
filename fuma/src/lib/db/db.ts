@@ -21,8 +21,10 @@ export function getDbBackend(
 
 export const createDB = (binding?: Hyperdrive) => {
   if (getDbBackend() === "d1") {
+    console.log("db backend: d1")
     return drizzleD1(env.DB, { relations: d1.relations, logger: false });
   }
+  console.log("db backend: pg")
   const hd = binding ?? env.HYPERDRIVE;
   return drizzlePg({
     client: createPgClient(hd.connectionString),
