@@ -1,13 +1,13 @@
 import handler from "@tanstack/react-start/server-entry";
 import { SyncRunRepo } from "@repo/source";
 import { createSourceDB } from "./lib/db/db";
-import { datasources, devDatasource } from "./datasource";
+import { createDatasources, createDevDatasource } from "./datasource";
 
 export default {
   fetch: handler.fetch,
   async scheduled(_controller: ScheduledController, env: Env) {
     const repo = new SyncRunRepo(createSourceDB(env));
-    const ds = env.NODE_ENV === "production" ? datasources : devDatasource;
+    const ds = env.NODE_ENV === "production" ? createDatasources(env) : createDevDatasource(env);
     const run = await repo.createRun(ds.map((source) => source.id));
     const workflowId = `sync-${env.NODE_ENV}-${run.id}`;
     try {

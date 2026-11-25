@@ -1,13 +1,13 @@
 import type { Datasource } from "@repo/source/builder";
 import {addRSSPage, imagePageTransformer, dateFolderTransformer, indexFolderTransformer} from "./transformer.ts";
 
-const ctx = {
-  env: {
-    GITHUB_TOKEN: process.env.GITHUB_TOKEN,
-    BASE_URL: process.env.BASE_URL
-  }
+type DatasourceEnv = {
+  GITHUB_TOKEN?: string
+  BASE_URL?: string
 }
-export const datasources = [
+
+// Secrets only exist on the runtime env, so build the source list per invocation.
+const createDatasourceList = ({ env }: { env: DatasourceEnv }): Datasource[] => [
   {
     id: 'btnews_btnews',
     slug: 'btnews',
@@ -19,12 +19,12 @@ export const datasources = [
     provider: {
       type: 'unstorage',
       driver: 'github' as const,
-      options: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/btnews", token: ctx.env.GITHUB_TOKEN },
+      options: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/btnews", token: env.GITHUB_TOKEN },
       includes: ['*.md', '*.mdx'],
     },
     github: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/btnews" },
     transformers: {
-      root: [ addRSSPage(`${ctx.env.BASE_URL}/rss/btnews`), indexFolderTransformer ],
+      root: [ addRSSPage(`${env.BASE_URL}/rss/btnews`), indexFolderTransformer ],
       folder:[ indexFolderTransformer ],
       page: [ imagePageTransformer ],
     },
@@ -40,12 +40,12 @@ export const datasources = [
     provider: {
       type: 'unstorage',
       driver: 'github' as const,
-      options: { repo: "mdark-org/bili-john-khan", branch: "main", dir: "/docs/john-khan", token: ctx.env.GITHUB_TOKEN },
+      options: { repo: "mdark-org/bili-john-khan", branch: "main", dir: "/docs/john-khan", token: env.GITHUB_TOKEN },
       includes: ['*.md', '*.mdx'],
     },
     github: { repo: "mdark-org/bili-john-khan", branch: "main", dir: "/docs/john-khan" },
     transformers: {
-      root: [ addRSSPage(`${ctx.env.BASE_URL}/rss/john-khan`) ],
+      root: [ addRSSPage(`${env.BASE_URL}/rss/john-khan`) ],
     }
   },
   {
@@ -59,12 +59,12 @@ export const datasources = [
     provider: {
       type: 'unstorage',
       driver: 'github' as const,
-      options: { repo: "mdark-org/bili-koala-oss", branch: "main", dir: "/docs/Koala聊开源", token: ctx.env.GITHUB_TOKEN },
+      options: { repo: "mdark-org/bili-koala-oss", branch: "main", dir: "/docs/Koala聊开源", token: env.GITHUB_TOKEN },
       includes: ['*.md', '*.mdx'],
     },
     github: { repo: "mdark-org/bili-koala-oss", branch: "main", dir: "/docs/Koala聊开源" },
     transformers: {
-      root: [ addRSSPage(`${ctx.env.BASE_URL}/rss/koala-oss`), dateFolderTransformer ],
+      root: [ addRSSPage(`${env.BASE_URL}/rss/koala-oss`), dateFolderTransformer ],
       folder: [ dateFolderTransformer ]
     }
   },
@@ -79,13 +79,13 @@ export const datasources = [
     provider: {
       type: 'unstorage',
       driver: 'github' as const,
-      options: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/opinion", token: ctx.env.GITHUB_TOKEN },
+      options: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/opinion", token: env.GITHUB_TOKEN },
       includes: ['*.md', '*.mdx'],
     },
     github: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/opinion" },
     transformers: {
       root: [
-        addRSSPage(`${ctx.env.BASE_URL}/rss/opinion`),
+        addRSSPage(`${env.BASE_URL}/rss/opinion`),
         indexFolderTransformer
       ],
       folder:[ indexFolderTransformer ],
@@ -103,13 +103,13 @@ export const datasources = [
     provider: {
       type: 'unstorage',
       driver: 'github' as const,
-      options: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/refnews", token: ctx.env.GITHUB_TOKEN },
+      options: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/refnews", token: env.GITHUB_TOKEN },
       includes: ['*.md', '*.mdx'],
     },
     github: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/refnews" },
     transformers: {
       root: [
-        addRSSPage(`${ctx.env.BASE_URL}/rss/refnews`),
+        addRSSPage(`${env.BASE_URL}/rss/refnews`),
         indexFolderTransformer
       ],
       folder:[ indexFolderTransformer ]
@@ -126,13 +126,13 @@ export const datasources = [
     provider: {
       type: 'unstorage',
       driver: 'github' as const,
-      options: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/slang", token: ctx.env.GITHUB_TOKEN },
+      options: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/slang", token: env.GITHUB_TOKEN },
       includes: ['*.md', '*.mdx'],
     },
     github: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/slang" },
     transformers: {
       root: [
-        addRSSPage(`${ctx.env.BASE_URL}/rss/slang`),
+        addRSSPage(`${env.BASE_URL}/rss/slang`),
         indexFolderTransformer
       ],
       folder:[ indexFolderTransformer ]
@@ -140,7 +140,9 @@ export const datasources = [
   }
 ] as Datasource[]
 
-export const devDatasource = [
+export const createDatasources = (env: DatasourceEnv) => createDatasourceList({ env })
+
+const createDevDatasourceList = ({ env }: { env: DatasourceEnv }): Datasource[] => [
   {
     id: 'btnews_opinion',
     slug: 'opinion',
@@ -152,13 +154,13 @@ export const devDatasource = [
     provider: {
       type: 'unstorage',
       driver: 'github' as const,
-      options: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/opinion", token: ctx.env.GITHUB_TOKEN },
+      options: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/opinion", token: env.GITHUB_TOKEN },
       includes: ['*.md', '*.mdx'],
     },
     github: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/opinion" },
     transformers: {
       root: [
-        addRSSPage(`${ctx.env.BASE_URL}/rss/opinion`),
+        addRSSPage(`${env.BASE_URL}/rss/opinion`),
         indexFolderTransformer
       ],
       folder:[ indexFolderTransformer ]
@@ -175,16 +177,18 @@ export const devDatasource = [
     provider: {
       type: 'unstorage',
       driver: 'github' as const,
-      options: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/slang", token: ctx.env.GITHUB_TOKEN },
+      options: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/slang", token: env.GITHUB_TOKEN },
       includes: ['*.md', '*.mdx'],
     },
     github: { repo: "mdark-org/btnews", branch: "master", dir: "/docs/btnews/slang" },
     transformers: {
       root: [
-        addRSSPage(`${ctx.env.BASE_URL}/rss/slang`),
+        addRSSPage(`${env.BASE_URL}/rss/slang`),
         indexFolderTransformer
       ],
       folder:[ indexFolderTransformer ]
     }
   }
 ] as Datasource[]
+
+export const createDevDatasource = (env: DatasourceEnv) => createDevDatasourceList({ env })
